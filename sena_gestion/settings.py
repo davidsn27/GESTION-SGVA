@@ -115,31 +115,15 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+# Configuración para desarrollo y producción
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Messages
-from django.contrib.messages import constants as messages
-
-MESSAGE_TAGS = {
-    messages.DEBUG: 'secondary',
-    messages.INFO: 'info',
-    messages.SUCCESS: 'success',
-    messages.WARNING: 'warning',
-    messages.ERROR: 'danger',
-}
-
 # Configuración para producción
 if not DEBUG:
-    # Configuración de archivos estáticos para producción
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    
     # Configuración de Whitenoise
     WHITENOISE_USE_FINDERS = True
     WHITENOISE_AUTOREFRESH = True

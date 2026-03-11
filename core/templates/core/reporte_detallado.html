@@ -1,0 +1,196 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Reporte Detallado de Aprendices{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Reporte Detallado de Aprendices
+                </h1>
+                <a href="{% url 'reportes' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Reportes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen General -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Aprendices</h5>
+                    <h2 class="mb-0">{{ stats.total_aprendices }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Disponibles</h5>
+                    <h2 class="mb-0">{{ stats.disponibles }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">En Proceso</h5>
+                    <h2 class="mb-0">{{ stats.en_proceso_seleccion }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Inhabilitados</h5>
+                    <h2 class="mb-0">{{ stats.inhabilitados_act }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalle por Estado -->
+    <div class="row">
+        {% for estado in detalle_estados %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <span class="badge {% if estado.codigo == 'DISPONIBLE' %}bg-success{% elif estado.codigo == 'INHABILITADO_ACT' %}bg-danger{% elif estado.codigo == 'PROCESO_SELECCION' %}bg-warning{% elif estado.codigo == 'PROCESO_ABIERTO' %}bg-info{% elif estado.codigo == 'SIN_CONTRATO' %}bg-secondary{% else %}bg-primary{% endif %} me-2">
+                            {{ estado.codigo }}
+                        </span>
+                        {{ estado.estado }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Cantidad:</strong> {{ estado.cantidad }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Porcentaje:</strong> {{ estado.porcentaje|floatformat:1 }}%
+                        </div>
+                    </div>
+                    
+                    {% if estado.recientes %}
+                    <h6 class="text-muted">Aprendices Recientes:</h6>
+                    <div class="list-group list-group-flush">
+                        {% for aprendiz in estado.recientes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ aprendiz.nombres }} {{ aprendiz.apellidos }}</strong><br>
+                                <small class="text-muted">{{ aprendiz.numero_documento }}</small>
+                            </div>
+                            <small class="text-muted">
+                                {{ aprendiz.fecha_creacion|date:"d/m/Y" }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No hay aprendices recientes en este estado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Distribución por Estado</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="estadosDetalladosChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Porcentajes por Estado</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="porcentajesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Gráfico de Estados Detallados
+const estadosDetalladosCtx = document.getElementById('estadosDetalladosChart').getContext('2d');
+const estadosDetalladosData = {
+    labels: [{% for estado in detalle_estados %}'{{ estado.estado }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [{
+        label: 'Cantidad de Aprendices',
+        data: [{% for estado in detalle_estados %}{{ estado.cantidad }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        backgroundColor: [
+            '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6c757d'
+        ],
+        borderWidth: 2
+    }]
+};
+
+new Chart(estadosDetalladosCtx, {
+    type: 'bar',
+    data: estadosDetalladosData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Gráfico de Porcentajes
+const porcentajesCtx = document.getElementById('porcentajesChart').getContext('2d');
+const porcentajesData = {
+    labels: [{% for estado in detalle_estados %}'{{ estado.estado }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [{
+        data: [{% for estado in detalle_estados %}{{ estado.porcentaje|floatformat:1 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        backgroundColor: [
+            '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6c757d'
+        ],
+        borderWidth: 2
+    }]
+};
+
+new Chart(porcentajesCtx, {
+    type: 'doughnut',
+    data: porcentajesData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.label + ': ' + context.parsed + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Guía de Clasificación - Gestión SENA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tags text-primary me-2"></i>
+            Guía de Clasificación Automática
+        </h1>
+    </div>
+</div>
+
+<!-- Estados Disponibles -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Estados de Aprendices
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">DISPONIBLE</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2"><strong>Descripción:</strong> Aprendiz disponible para vinculación laboral.</p>
+                                <p class="mb-2"><strong>Palabras clave:</strong></p>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="badge bg-light text-dark">disponible</span>
+                                    <span class="badge bg-light text-dark">activo</span>
+                                    <span class="badge bg-light text-dark">libre</span>
+                                    <span class="badge bg-light text-dark">buscando</span>
+                                    <span class="badge bg-light text-dark">disponibilidad</span>
+                                    <span class="badge bg-light text-dark">practica</span>
+                                    <span class="badge bg-light text-dark">1</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">INHABILITADO_ACT</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2"><strong>Descripción:</strong> Aprendiz inhabilitado por actualización o suspensión.</p>
+                                <p class="mb-2"><strong>Palabras clave:</strong></p>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="badge bg-light text-dark">inhabilitado</span>
+                                    <span class="badge bg-light text-dark">suspendido</span>
+                                    <span class="badge bg-light text-dark">bloqueado</span>
+                                    <span class="badge bg-light text-dark">no disponible</span>
+                                    <span class="badge bg-light text-dark">inactivo</span>
+                                    <span class="badge bg-light text-dark">2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">PROCESO_SELECCION</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2"><strong>Descripción:</strong> Aprendiz en proceso de selección con empresa.</p>
+                                <p class="mb-2"><strong>Palabras clave:</strong></p>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="badge bg-light text-dark">seleccion</span>
+                                    <span class="badge bg-light text-dark">proceso</span>
+                                    <span class="badge bg-light text-dark">entrevista</span>
+                                    <span class="badge bg-light text-dark">evaluacion</span>
+                                    <span class="badge bg-light text-dark">evaluación</span>
+                                    <span class="badge bg-light text-dark">en proceso</span>
+                                    <span class="badge bg-light text-dark">3</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">PROCESO_ABIERTO</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2"><strong>Descripción:</strong> Aprendiz postulado o aplicando a vacantes.</p>
+                                <p class="mb-2"><strong>Palabras clave:</strong></p>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="badge bg-light text-dark">abierto</span>
+                                    <span class="badge bg-light text-dark">postulado</span>
+                                    <span class="badge bg-light text-dark">aplicado</span>
+                                    <span class="badge bg-light text-dark">candidato</span>
+                                    <span class="badge bg-light text-dark">interesado</span>
+                                    <span class="badge bg-light text-dark">4</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-secondary mb-3">
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0">SIN_CONTRATO</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2"><strong>Descripción:</strong> Aprendiz seleccionado pero sin contrato formalizado.</p>
+                                <p class="mb-2"><strong>Palabras clave:</strong></p>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="badge bg-light text-dark">contrato</span>
+                                    <span class="badge bg-light text-dark">pendiente</span>
+                                    <span class="badge bg-light text-dark">esperando</span>
+                                    <span class="badge bg-light text-dark">documentacion</span>
+                                    <span class="badge bg-light text-dark">papeles</span>
+                                    <span class="badge bg-light text-dark">5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reglas de Clasificación -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-brain me-2"></i>
+                    Reglas de Clasificación Automática
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>1. Clasificación por Palabras Clave</h6>
+                <p>El sistema busca palabras clave en el campo de estado y clasifica automáticamente:</p>
+                <ul>
+                    <li>Si contiene "dispon", "activo", "libre" → <span class="badge bg-success">DISPONIBLE</span></li>
+                    <li>Si contiene "inhab", "suspend", "block" → <span class="badge bg-danger">INHABILITADO_ACT</span></li>
+                    <li>Si contiene "selec", "proce", "entre" → <span class="badge bg-warning">PROCESO_SELECCION</span></li>
+                    <li>Si contiene "abier", "post", "aplic" → <span class="badge bg-info">PROCESO_ABIERTO</span></li>
+                    <li>Si contiene "contra", "pend", "esper" → <span class="badge bg-secondary">SIN_CONTRATO</span></li>
+                </ul>
+
+                <h6 class="mt-3">2. Clasificación por Contexto</h6>
+                <p>Si no hay estado definido, el sistema analiza otros campos:</p>
+                <ul>
+                    <li><strong>Con empresa asignada:</strong> <span class="badge bg-warning">PROCESO_SELECCION</span> o <span class="badge bg-secondary">SIN_CONTRATO</span></li>
+                    <li><strong>Con fecha de fin práctica:</strong> <span class="badge bg-success">DISPONIBLE</span></li>
+                    <li><strong>Sin información específica:</strong> <span class="badge bg-success">DISPONIBLE</span> (por defecto)</li>
+                </ul>
+
+                <h6 class="mt-3">3. Clasificación por Valores Numéricos</h6>
+                <p>Soporta códigos numéricos:</p>
+                <ul>
+                    <li><strong>1</strong> → <span class="badge bg-success">DISPONIBLE</span></li>
+                    <li><strong>2</strong> → <span class="badge bg-danger">INHABILITADO_ACT</span></li>
+                    <li><strong>3</strong> → <span class="badge bg-warning">PROCESO_SELECCION</span></li>
+                    <li><strong>4</strong> → <span class="badge bg-info">PROCESO_ABIERTO</span></li>
+                    <li><strong>5</strong> → <span class="badge bg-secondary">SIN_CONTRATO</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Tips para Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>Formato Recomendado</h6>
+                    <p class="mb-0">Usa los estados exactos para mejor precisión:</p>
+                    <ul class="mb-0 mt-2">
+                        <li>DISPONIBLE</li>
+                        <li>INHABILITADO_ACT</li>
+                        <li>PROCESO_SELECCION</li>
+                        <li>PROCESO_ABIERTO</li>
+                        <li>SIN_CONTRATO</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Evitar Ambigüedad</h6>
+                    <p class="mb-0">No dejes el campo de estado vacío si quieres controlar la clasificación manualmente.</p>
+                </div>
+                
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-check-circle me-2"></i>Verificación</h6>
+                    <p class="mb-0">Revisa el reporte de carga para ver qué aprendices fueron clasificados automáticamente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ejemplos -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Ejemplos de Clasificación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Valor en Excel</th>
+                                <th>Clasificación</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>Disponible para práctica</code></td>
+                                <td><span class="badge bg-success">DISPONIBLE</span></td>
+                                <td>Contiene "dispon" y "practica"</td>
+                            </tr>
+                            <tr>
+                                <td><code>En proceso de selección</code></td>
+                                <td><span class="badge bg-warning">PROCESO_SELECCION</span></td>
+                                <td>Contiene "proceso" y "seleccion"</td>
+                            </tr>
+                            <tr>
+                                <td><code>Postulado a empresa XYZ</code></td>
+                                <td><span class="badge bg-info">PROCESO_ABIERTO</span></td>
+                                <td>Contiene "postulado"</td>
+                            </tr>
+                            <tr>
+                                <td><code>Esperando contrato</code></td>
+                                <td><span class="badge bg-secondary">SIN_CONTRATO</span></td>
+                                <td>Contiene "contrato" y "esperando"</td>
+                            </tr>
+                            <tr>
+                                <td><code>Suspendido por falta</code></td>
+                                <td><span class="badge bg-danger">INHABILITADO_ACT</span></td>
+                                <td>Contiene "suspendido"</td>
+                            </tr>
+                            <tr>
+                                <td><code>3</code></td>
+                                <td><span class="badge bg-warning">PROCESO_SELECCION</span></td>
+                                <td>Valor numérico 3</td>
+                            </tr>
+                            <tr>
+                                <td><code>(vacío)</code></td>
+                                <td><span class="badge bg-success">DISPONIBLE</span></td>
+                                <td>Por defecto o según contexto</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'carga_excel' %}" class="btn btn-primary">
+                        <i class="fas fa-file-excel me-2"></i>Cargar Archivo
+                    </a>
+                    <a href="{% url 'lista_aprendices' %}" class="btn btn-secondary">
+                        <i class="fas fa-users me-2"></i>Ver Aprendices
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-info">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

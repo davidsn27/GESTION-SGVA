@@ -1,0 +1,1090 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Eliminación Masiva - Gestión SENA{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Estilos personalizados para eliminación masiva */
+.elimination-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.main-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.filter-section {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.filter-badge {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.action-button {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.danger-button {
+    background: linear-gradient(45deg, #f56565, #ed8936);
+}
+
+.danger-button:hover {
+    box-shadow: 0 10px 20px rgba(245, 101, 101, 0.3);
+}
+
+.results-table {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.results-table thead {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+}
+
+.results-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.results-table tbody tr:hover {
+    background: #f8f9fa;
+    transform: scale(1.01);
+}
+
+.checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 2px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.checkbox-custom:checked {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-color: #667eea;
+}
+
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.warning-badge {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.success-badge {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.info-badge {
+    background: #bee3f8;
+    color: #2c5282;
+}
+
+.selection-counter {
+    background: linear-gradient(45deg, #48bb78, #38a169);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.modal-header-custom {
+    background: linear-gradient(45deg, #f56565, #ed8936);
+    color: white;
+    border-radius: 20px 20px 0 0;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.progress-custom {
+    height: 8px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.progress-bar-custom {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.alert-custom {
+    border-radius: 15px;
+    border: none;
+    padding: 1rem 1.5rem;
+}
+
+.alert-danger-custom {
+    background: linear-gradient(45deg, #fed7d7, #feb2b2);
+    color: #742a2a;
+}
+
+.alert-warning-custom {
+    background: linear-gradient(45deg, #fefcbf, #faf089);
+    color: #744210;
+}
+
+.alert-success-custom {
+    background: linear-gradient(45deg, #c6f6d5, #9ae6b4);
+    color: #22543d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="elimination-container">
+    <div class="container">
+        <!-- Header Principal -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-white fw-bold mb-3">
+                <i class="fas fa-shield-alt me-3"></i>
+                Centro de Eliminación Masiva
+            </h1>
+            <p class="lead text-white opacity-90">
+                Sistema avanzado para gestión y eliminación de aprendices
+            </p>
+        </div>
+
+        <!-- Tarjeta Principal -->
+        <div class="main-card p-4">
+            <!-- Estadísticas en Tiempo Real -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number" id="totalAprendices">0</div>
+                        <div class="text-muted">Total Aprendices</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number" id="seleccionadosCount">0</div>
+                        <div class="text-muted">Seleccionados</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number" id="conEmpresaCount">0</div>
+                        <div class="text-muted">Con Empresa</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-number" id="conPracticaCount">0</div>
+                        <div class="text-muted">En Práctica</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Filtros Avanzados -->
+            <div class="filter-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtros Inteligentes
+                    </h5>
+                    <span class="filter-badge">
+                        <i class="fas fa-brain me-1"></i>
+                        IA Habilitada
+                    </span>
+                </div>
+                
+                <form id="filtroAvanzadoForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-user-tag me-1"></i>Estado
+                            </label>
+                            <select class="form-select" id="filtroEstado" name="estado">
+                                <option value="">Todos los estados</option>
+                                {% for estado_code, estado_label in aprendices.0.ESTADOS %}
+                                    <option value="{{ estado_code }}">{{ estado_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-building me-1"></i>Empresa
+                            </label>
+                            <select class="form-select" id="filtroEmpresa" name="empresa">
+                                <option value="">Todas las empresas</option>
+                                {% for empresa in empresas %}
+                                    <option value="{{ empresa.pk }}">{{ empresa.razon_social|truncatechars:25 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-calendar me-1"></i>Desde
+                            </label>
+                            <input type="date" class="form-control" id="filtroFechaDesde" name="fecha_desde">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-calendar me-1"></i>Hasta
+                            </label>
+                            <input type="date" class="form-control" id="filtroFechaHasta" name="fecha_hasta">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-search me-1"></i>Búsqueda
+                            </label>
+                            <input type="text" class="form-control" id="filtroBusqueda" name="busqueda" 
+                                   placeholder="Buscar...">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" class="action-button me-2" id="btnFiltrar">
+                                <i class="fas fa-search me-2"></i>Filtrar con IA
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltros">
+                                <i class="fas fa-undo me-2"></i>Limpiar
+                            </button>
+                            <button type="button" class="btn btn-outline-info ms-2" id="btnSeleccionarTodos">
+                                <i class="fas fa-check-square me-2"></i>Seleccionar Todos
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sección de Resultados -->
+            <div id="resultadosSection" style="display: none;">
+                <!-- Barra de Progreso -->
+                <div class="progress-custom mb-3">
+                    <div class="progress-bar-custom" id="progressBar" style="width: 0%"></div>
+                </div>
+
+                <!-- Tabla de Resultados -->
+                <div class="results-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="50">
+                                        <input type="checkbox" class="checkbox-custom" id="checkboxPrincipal">
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-id-card me-1"></i>Documento
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-user me-1"></i>Nombre
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-graduation-cap me-1"></i>Especialización
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-flag me-1"></i>Estado
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-building me-1"></i>Empresa
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Alertas
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-cogs me-1"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaResultados">
+                                <!-- Datos cargados dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Panel de Acciones -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div>
+                        <span class="selection-counter" id="contadorSeleccion">
+                            <i class="fas fa-check-circle me-2"></i>
+                            0 aprendices seleccionados
+                        </span>
+                    </div>
+                    <div>
+                        <button type="button" class="action-button danger-button me-2" id="btnEliminarMasivo" disabled>
+                            <i class="fas fa-trash-alt me-2"></i>Eliminar Seleccionados
+                        </button>
+                        <button type="button" class="action-button danger-button me-2" id="btnEliminarTodos">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Eliminar TODOS
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnExportar">
+                            <i class="fas fa-download me-2"></i>Exportar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Eliminar TODOS -->
+<div class="modal fade" id="modalEliminarTodos" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-skull-crossbones me-2"></i>
+                    ELIMINACIÓN TOTAL - ADVERTENCIA MÁXIMA
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-custom mb-4">
+                    <h4><i class="fas fa-bomb me-2"></i>PELIGRO EXTREMO</h4>
+                    <p class="mb-0">Estás a punto de eliminar <strong>TODOS</strong> los aprendices del sistema.</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="alert alert-warning alert-custom">
+                            <h6><i class="fas fa-info-circle me-2"></i>Estadísticas Actuales:</h6>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="stats-number" id="totalTodosModal">0</div>
+                                    <small>Total Aprendices</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stats-number" id="empresaTodosModal">0</div>
+                                    <small>Con Empresa</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stats-number" id="practicaTodosModal">0</div>
+                                    <small>En Práctica</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger alert-custom">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>CONSECUENCIAS IRREVERSIBLES:</h6>
+                    <ul class="mb-0">
+                        <li>❌ <strong>100%</strong> de los aprendices serán eliminados</li>
+                        <li>❌ <strong>TODOS</strong> los datos históricos se perderán</li>
+                        <li>❌ <strong>TODAS</strong> las empresas vinculadas se desvincularán</li>
+                        <li>❌ <strong>TODAS</strong> las prácticas activas se cancelarán</li>
+                        <li>❌ <strong>NINGÚN</strong> dato podrá ser recuperado</li>
+                        <li>❌ <strong>NADIE</strong> podrá revertir esta acción</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-dark alert-custom">
+                    <h6><i class="fas fa-shield-alt me-2"></i>CONFIRMACIÓN REQUERIDA:</h6>
+                    <p class="mb-2">Escribe <code>ELIMINAR_TODOS</code> para confirmar que entiendes las consecuencias:</p>
+                    <input type="text" class="form-control" id="confirmacionTexto" placeholder="Escribe ELIMINAR_TODOS">
+                </div>
+
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="confirmacionTodosCritica">
+                    <label class="form-check-label" for="confirmacionTodosCritica">
+                        <strong>Confirmo que quiero eliminar TODOS los aprendices y entiendo que esta acción es IRREVERSIBLE</strong>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>CANCELAR
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminarTodos" disabled>
+                    <i class="fas fa-skull me-2"></i>ELIMINAR TODOS IRREVISIBLEMENTE
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación Moderno -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmación de Eliminación Masiva
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger-custom alert-custom mb-4">
+                    <h6><i class="fas fa-skull-crossbones me-2"></i>ADVERTENCIA CRÍTICA</h6>
+                    <p class="mb-0">Estás a punto de eliminar permanentemente <strong id="cantidadEliminarModal">0</strong> aprendices del sistema.</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="alert alert-warning-custom alert-custom">
+                            <h6><i class="fas fa-building me-2"></i>Con Empresa Vinculada</h6>
+                            <div class="stats-number" id="conEmpresaModal">0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info-custom alert-custom">
+                            <h6><i class="fas fa-briefcase me-2"></i>En Práctica Activa</h6>
+                            <div class="stats-number" id="conPracticaModal">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger-custom alert-custom">
+                    <h6><i class="fas fa-info-circle me-2"></i>Consecuencias Irreversibles:</h6>
+                    <ul class="mb-0">
+                        <li>❌ Eliminación permanente de todos los datos</li>
+                        <li>❌ Pérdida de historial y registros</li>
+                        <li>❌ Desvinculación de empresas</li>
+                        <li>❌ No se podrá recuperar la información</li>
+                    </ul>
+                </div>
+
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" id="confirmacionCritica">
+                    <label class="form-check-label" for="confirmacionCritica">
+                        <strong>Confirmo que entiendo las consecuencias y deseo proceder con la eliminación permanente</strong>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <button type="button" class="action-button danger-button" id="btnConfirmarEliminar" disabled>
+                    <i class="fas fa-skull me-2"></i>Eliminar Permanentemente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulario Oculto -->
+<form method="post" action="{% url 'eliminacion_masiva_aprendices' %}" id="formularioEliminacion" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="aprendices_seleccionados" id="aprendicesSeleccionadosInput">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class SistemaEliminacionMasiva {
+    constructor() {
+        console.log('🔧 Constructor de SistemaEliminacionMasiva llamado');
+        this.aprendices = [];
+        this.seleccionados = new Set();
+        this.inicializarEventos();
+        this.actualizarEstadisticas();
+        console.log('📊 Estado inicial - Aprendices:', this.aprendices.length, 'Seleccionados:', this.seleccionados.size);
+    }
+
+    inicializarEventos() {
+        console.log('🎯 Inicializando eventos...');
+        
+        // Eventos principales con debug
+        const eventos = [
+            { id: 'btnFiltrar', evento: 'click', metodo: () => this.filtrarAprendices() },
+            { id: 'btnLimpiarFiltros', evento: 'click', metodo: () => this.limpiarFiltros() },
+            { id: 'btnSeleccionarTodos', evento: 'click', metodo: () => this.seleccionarTodos() },
+            { id: 'btnEliminarMasivo', evento: 'click', metodo: () => this.mostrarConfirmacion() },
+            { id: 'btnEliminarTodos', evento: 'click', metodo: () => this.mostrarConfirmacionTodos() },
+            { id: 'btnConfirmarEliminar', evento: 'click', metodo: () => this.eliminarAprendices() },
+            { id: 'btnConfirmarEliminarTodos', evento: 'click', metodo: () => this.eliminarTodos() },
+            { id: 'checkboxPrincipal', evento: 'change', metodo: (e) => this.seleccionarTodos(e.target.checked) },
+            { id: 'confirmacionCritica', evento: 'change', metodo: (e) => {
+                const btn = document.getElementById('btnConfirmarEliminar');
+                btn.disabled = !e.target.checked;
+                console.log('🔐 Checkbox de confirmación cambiado:', e.target.checked, 'Botón habilitado:', !btn.disabled);
+            }},
+            { id: 'confirmacionTodosCritica', evento: 'change', metodo: () => this.verificarConfirmacionTodos() },
+            { id: 'confirmacionTexto', evento: 'input', metodo: () => this.verificarConfirmacionTodos() }
+        ];
+        
+        eventos.forEach(({ id, evento, metodo }) => {
+            const elemento = document.getElementById(id);
+            if (elemento) {
+                elemento.addEventListener(evento, metodo);
+                console.log(`✅ Evento agregado: ${id} -> ${evento}`);
+            } else {
+                console.error(`❌ Elemento no encontrado: ${id}`);
+            }
+        });
+
+        // Auto-búsqueda en tiempo real
+        let timeoutBusqueda;
+        const filtroBusqueda = document.getElementById('filtroBusqueda');
+        if (filtroBusqueda) {
+            filtroBusqueda.addEventListener('input', (e) => {
+                clearTimeout(timeoutBusqueda);
+                timeoutBusqueda = setTimeout(() => this.filtrarAprendices(), 500);
+            });
+            console.log('✅ Auto-búsqueda configurada');
+        }
+        
+        console.log('🎯 Eventos inicializados correctamente');
+    }
+
+    async filtrarAprendices() {
+        this.mostrarCargando(true);
+        
+        const formData = new FormData(document.getElementById('filtroAvanzadoForm'));
+        
+        try {
+            const response = await fetch('/aprendices/filtro-eliminacion/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.aprendices = data.aprendices;
+                this.renderResultados(data.aprendices);
+                this.actualizarEstadisticas();
+                document.getElementById('resultadosSection').style.display = 'block';
+                
+                // Animación de entrada
+                this.animarResultados();
+            } else {
+                this.mostrarError('Error al filtrar aprendices: ' + data.message);
+            }
+        } catch (error) {
+            this.mostrarError('Error de conexión: ' + error.message);
+        } finally {
+            this.mostrarCargando(false);
+        }
+    }
+
+    renderResultados(aprendices) {
+        const tbody = document.getElementById('tablaResultados');
+        tbody.innerHTML = '';
+
+        if (aprendices.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <h5>No se encontraron aprendices</h5>
+                            <p>Intenta con otros filtros o parámetros de búsqueda</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        aprendices.forEach((aprendiz, index) => {
+            const tr = this.crearFilaAprendiz(aprendiz, index);
+            tbody.appendChild(tr);
+        });
+    }
+
+    crearFilaAprendiz(aprendiz, index) {
+        const tr = document.createElement('tr');
+        tr.style.animationDelay = `${index * 0.05}s`;
+        tr.className = 'animate-fade-in';
+
+        const alertas = [];
+        if (aprendiz.tiene_empresa) alertas.push('Empresa');
+        if (aprendiz.tiene_practica_activa) alertas.push('Práctica');
+
+        const alertasHtml = alertas.length > 0 
+            ? alertas.map(alerta => `<span class="status-badge warning-badge me-1">${alerta}</span>`).join('')
+            : '<span class="status-badge success-badge">Sin alertas</span>';
+
+        const estadoColor = this.getEstadoColor(aprendiz.estado);
+
+        tr.innerHTML = `
+            <td>
+                <input type="checkbox" class="checkbox-custom checkbox-aprendiz" 
+                       value="${aprendiz.id}" data-nombre="${aprendiz.nombre_completo}"
+                       data-empresa="${aprendiz.tiene_empresa}"
+                       data-practica="${aprendiz.tiene_practica_activa}">
+            </td>
+            <td><strong>${aprendiz.numero_documento}</strong></td>
+            <td>${aprendiz.nombre_completo}</td>
+            <td>
+                ${aprendiz.especializacion || '<span class="text-muted">Sin especialización</span>'}
+            </td>
+            <td>
+                <span class="status-badge ${estadoColor}">
+                    ${aprendiz.estado_display}
+                </span>
+            </td>
+            <td>
+                ${aprendiz.empresa || '<span class="text-muted">Sin empresa</span>'}
+            </td>
+            <td>${alertasHtml}</td>
+            <td>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar-individual" 
+                            data-id="${aprendiz.id}" data-nombre="${aprendiz.nombre_completo}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        // Agregar evento al checkbox
+        const checkbox = tr.querySelector('.checkbox-aprendiz');
+        checkbox.addEventListener('change', () => this.actualizarSeleccion());
+
+        // Evento de eliminación individual
+        const btnEliminar = tr.querySelector('.btn-eliminar-individual');
+        btnEliminar.addEventListener('click', () => this.eliminarIndividual(aprendiz.id, aprendiz.nombre_completo));
+
+        return tr;
+    }
+
+    getEstadoColor(estado) {
+        const colores = {
+            'DISPONIBLE': 'success-badge',
+            'INHABILITADO_ACT': 'warning-badge',
+            'PROCESO_SELECCION': 'info-badge',
+            'PROCESO_ABIERTO': 'info-badge',
+            'SIN_CONTRATO': 'warning-badge'
+        };
+        return colores[estado] || 'info-badge';
+    }
+
+    actualizarSeleccion() {
+        this.seleccionados.clear();
+        
+        document.querySelectorAll('.checkbox-aprendiz:checked').forEach(checkbox => {
+            this.seleccionados.add(checkbox.value);
+        });
+
+        this.actualizarEstadisticas();
+        this.actualizarBotonEliminar();
+    }
+
+    seleccionarTodos(marcar) {
+        document.querySelectorAll('.checkbox-aprendiz').forEach(checkbox => {
+            checkbox.checked = marcar;
+        });
+        document.getElementById('checkboxPrincipal').checked = marcar;
+        this.actualizarSeleccion();
+    }
+
+    actualizarEstadisticas() {
+        const total = this.aprendices.length;
+        const seleccionados = this.seleccionados.size;
+        const conEmpresa = this.aprendices.filter(a => a.tiene_empresa).length;
+        const conPractica = this.aprendices.filter(a => a.tiene_practica_activa).length;
+
+        document.getElementById('totalAprendices').textContent = total;
+        document.getElementById('seleccionadosCount').textContent = seleccionados;
+        document.getElementById('conEmpresaCount').textContent = conEmpresa;
+        document.getElementById('conPracticaCount').textContent = conPractica;
+
+        // Actualizar contador de selección
+        const contador = document.getElementById('contadorSeleccion');
+        contador.innerHTML = `<i class="fas fa-check-circle me-2"></i>${seleccionados} aprendices seleccionados`;
+
+        // Actualizar checkbox principal
+        const checkboxes = document.querySelectorAll('.checkbox-aprendiz');
+        const marcados = document.querySelectorAll('.checkbox-aprendiz:checked');
+        
+        if (checkboxes.length > 0) {
+            document.getElementById('checkboxPrincipal').checked = checkboxes.length === marcados.length;
+            document.getElementById('checkboxPrincipal').indeterminate = marcados.length > 0 && marcados.length < checkboxes.length;
+        }
+    }
+
+    actualizarBotonEliminar() {
+        const btnEliminar = document.getElementById('btnEliminarMasivo');
+        const cantidadSeleccionados = this.seleccionados.size;
+        
+        console.log('🔘 Actualizando botón eliminar - Seleccionados:', cantidadSeleccionados);
+        
+        if (btnEliminar) {
+            const estabaDeshabilitado = btnEliminar.disabled;
+            btnEliminar.disabled = cantidadSeleccionados === 0;
+            
+            if (estabaDeshabilitado && !btnEliminar.disabled) {
+                console.log('✅ Botón eliminar HABILITADO');
+            } else if (!estabaDeshabilitado && btnEliminar.disabled) {
+                console.log('🚫 Botón eliminar DESHABILITADO');
+            }
+        } else {
+            console.error('❌ Botón eliminar no encontrado');
+        }
+    }
+
+    mostrarConfirmacion() {
+        console.log('🚨 Mostrando confirmación - Seleccionados:', this.seleccionados.size);
+        
+        if (this.seleccionados.size === 0) {
+            this.mostrarError('Por favor selecciona al menos un aprendiz');
+            return;
+        }
+
+        // Calcular estadísticas para el modal
+        const seleccionadosArray = Array.from(this.seleccionados);
+        const aprendicesSeleccionados = this.aprendices.filter(a => seleccionadosArray.includes(a.id.toString()));
+        
+        const conEmpresa = aprendicesSeleccionados.filter(a => a.tiene_empresa).length;
+        const conPractica = aprendicesSeleccionados.filter(a => a.tiene_practica_activa).length;
+
+        console.log('📊 Estadísticas para modal:', {
+            total: this.seleccionados.size,
+            conEmpresa,
+            conPractica
+        });
+
+        // Mostrar modal
+        try {
+            const modalElement = document.getElementById('modalConfirmacion');
+            if (!modalElement) {
+                console.error('❌ Elemento modalConfirmacion no encontrado');
+                this.mostrarError('Error: Modal no encontrado');
+                return;
+            }
+            
+            const modal = new bootstrap.Modal(modalElement);
+            
+            // Esperar a que el modal se muestre completamente
+            modalElement.addEventListener('shown.bs.modal', () => {
+                console.log('🎯 Modal completamente visible, actualizando elementos...');
+                
+                // Actualizar modal después de que esté visible
+                const cantidadModal = document.getElementById('cantidadEliminarModal');
+                const empresaModal = document.getElementById('conEmpresaModal');
+                const practicaModal = document.getElementById('conPracticaModal');
+                
+                console.log('🔍 Verificando elementos del modal:', {
+                    cantidadModal: !!cantidadModal,
+                    empresaModal: !!empresaModal,
+                    practicaModal: !!practicaModal
+                });
+                
+                if (cantidadModal) {
+                    cantidadModal.textContent = this.seleccionados.size;
+                    console.log('✅ Cantidad actualizada:', this.seleccionados.size);
+                } else {
+                    console.error('❌ Elemento cantidadEliminarModal no encontrado');
+                }
+                
+                if (empresaModal) {
+                    empresaModal.textContent = conEmpresa;
+                    console.log('✅ Empresa actualizada:', conEmpresa);
+                } else {
+                    console.error('❌ Elemento conEmpresaModal no encontrado');
+                }
+                
+                if (practicaModal) {
+                    practicaModal.textContent = conPractica;
+                    console.log('✅ Práctica actualizada:', conPractica);
+                } else {
+                    console.error('❌ Elemento conPracticaModal no encontrado');
+                }
+            }, { once: true });
+            
+            modal.show();
+            console.log('✅ Modal mostrado correctamente');
+        } catch (error) {
+            console.error('❌ Error al mostrar modal:', error);
+            this.mostrarError('Error al mostrar ventana de confirmación');
+        }
+    }
+
+    async eliminarTodos() {
+        console.log('💀 ELIMINANDO TODOS los aprendices...');
+        
+        try {
+            const response = await fetch('/aprendices/eliminar-todos/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.mostrarExito('✅ TODOS los aprendices han sido eliminados exitosamente');
+                bootstrap.Modal.getInstance(document.getElementById('modalEliminarTodos')).hide();
+                setTimeout(() => window.location.href = '/aprendices/', 2000);
+            } else {
+                this.mostrarError('❌ Error al eliminar todos los aprendices: ' + data.message);
+            }
+        } catch (error) {
+            this.mostrarError('❌ Error de conexión al eliminar todos los aprendices: ' + error.message);
+        }
+    }
+
+    mostrarConfirmacionTodos() {
+        console.log('🚨 Mostrando confirmación para eliminar TODOS');
+        
+        // Obtener estadísticas totales
+        this.obtenerEstadisticasTotales().then(estadisticas => {
+            console.log('📊 Estadísticas totales:', estadisticas);
+            
+            // Actualizar modal
+            document.getElementById('totalTodosModal').textContent = estadisticas.total;
+            document.getElementById('empresaTodosModal').textContent = estadisticas.conEmpresa;
+            document.getElementById('practicaTodosModal').textContent = estadisticas.conPractica;
+            
+            // Mostrar modal
+            try {
+                const modal = new bootstrap.Modal(document.getElementById('modalEliminarTodos'));
+                modal.show();
+                console.log('✅ Modal de eliminación total mostrado');
+            } catch (error) {
+                console.error('❌ Error al mostrar modal de eliminación total:', error);
+                this.mostrarError('Error al mostrar ventana de confirmación para eliminar todos');
+            }
+        });
+    }
+
+    async obtenerEstadisticasTotales() {
+        try {
+            const response = await fetch('/aprendices/estadisticas-totales/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                }
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al obtener estadísticas totales:', error);
+            return { total: 0, conEmpresa: 0, conPractica: 0 };
+        }
+    }
+
+    verificarConfirmacionTodos() {
+        const texto = document.getElementById('confirmacionTexto').value;
+        const checkbox = document.getElementById('confirmacionTodosCritica').checked;
+        const boton = document.getElementById('btnConfirmarEliminarTodos');
+        
+        const textoCorrecto = texto === 'ELIMINAR_TODOS';
+        boton.disabled = !(textoCorrecto && checkbox);
+        
+        console.log('🔐 Verificación eliminar todos:', {
+            texto,
+            textoCorrecto,
+            checkbox,
+            botonHabilitado: !boton.disabled
+        });
+    }
+
+    async eliminarAprendices() {
+        const idsArray = Array.from(this.seleccionados);
+        document.getElementById('aprendicesSeleccionadosInput').value = idsArray.join(',');
+
+        try {
+            const response = await fetch(document.getElementById('formularioEliminacion').action, {
+                method: 'POST',
+                body: new FormData(document.getElementById('formularioEliminacion')),
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                }
+            });
+
+            if (response.ok) {
+                this.mostrarExito('Aprendices eliminados exitosamente');
+                bootstrap.Modal.getInstance(document.getElementById('modalConfirmacion')).hide();
+                setTimeout(() => window.location.href = '/aprendices/', 2000);
+            } else {
+                throw new Error('Error en la respuesta del servidor');
+            }
+        } catch (error) {
+            this.mostrarError('Error al eliminar aprendices: ' + error.message);
+        }
+    }
+
+    async eliminarIndividual(id, nombre) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar a ${nombre}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/aprendices/${id}/eliminar-ajax/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.mostrarExito(data.message);
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                this.mostrarError(data.message);
+            }
+        } catch (error) {
+            this.mostrarError('Error al eliminar aprendiz: ' + error.message);
+        }
+    }
+
+    limpiarFiltros() {
+        document.getElementById('filtroAvanzadoForm').reset();
+        document.getElementById('resultadosSection').style.display = 'none';
+        this.aprendices = [];
+        this.seleccionados.clear();
+        this.actualizarEstadisticas();
+    }
+
+    mostrarCargando(mostrar) {
+        const progressBar = document.getElementById('progressBar');
+        if (mostrar) {
+            progressBar.style.width = '100%';
+        } else {
+            setTimeout(() => progressBar.style.width = '0%', 500);
+        }
+    }
+
+    animarResultados() {
+        document.querySelectorAll('#tablaResultados tr').forEach((tr, index) => {
+            tr.style.opacity = '0';
+            tr.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                tr.style.transition = 'all 0.5s ease';
+                tr.style.opacity = '1';
+                tr.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    }
+
+    mostrarExito(mensaje) {
+        // Implementar toast de éxito
+        console.log('Éxito:', mensaje);
+    }
+
+    mostrarError(mensaje) {
+        // Implementar toast de error
+        console.log('Error:', mensaje);
+    }
+
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+}
+
+// Inicializar el sistema cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Inicializando Sistema de Eliminación Masiva...');
+    
+    // Verificar que los elementos existan
+    const elementosCriticos = {
+        btnFiltrar: document.getElementById('btnFiltrar'),
+        btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros'),
+        btnSeleccionarTodos: document.getElementById('btnSeleccionarTodos'),
+        btnEliminarMasivo: document.getElementById('btnEliminarMasivo'),
+        btnConfirmarEliminar: document.getElementById('btnConfirmarEliminar'),
+        checkboxPrincipal: document.getElementById('checkboxPrincipal'),
+        confirmacionCritica: document.getElementById('confirmacionCritica')
+    };
+    
+    // Verificar elementos críticos
+    const elementosFaltantes = Object.entries(elementosCriticos)
+        .filter(([id, elemento]) => !elemento)
+        .map(([id]) => id);
+    
+    if (elementosFaltantes.length > 0) {
+        console.error('❌ Elementos faltantes:', elementosFaltantes);
+        return;
+    }
+    
+    console.log('✅ Todos los elementos críticos encontrados');
+    
+    try {
+        new SistemaEliminacionMasiva();
+        console.log('✅ Sistema de Eliminación Masiva inicializado correctamente');
+    } catch (error) {
+        console.error('❌ Error al inicializar el sistema:', error);
+    }
+});
+</script>
+{% endblock %}

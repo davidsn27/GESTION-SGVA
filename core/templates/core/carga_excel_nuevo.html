@@ -1,0 +1,1156 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Carga de Archivos Excel - Gestión SENA{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --primary-color: #4f46e5;
+    --primary-dark: #4338ca;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --border-radius: 12px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+body {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1.125rem;
+    color: var(--gray-600);
+    font-weight: 400;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.upload-area {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: var(--gray-50);
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background: white;
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.upload-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    color: var(--gray-400);
+}
+
+.upload-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.upload-subtext {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    margin-bottom: 1.5rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.file-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.file-item:hover {
+    background: var(--gray-50);
+}
+
+.file-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--success-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+}
+
+.file-size {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.file-remove {
+    background: none;
+    border: none;
+    color: var(--error-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.file-remove:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.stat-card {
+    background: var(--gray-50);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-top: 0.25rem;
+}
+
+.progress-container {
+    margin-top: 2rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.progress-status {
+    font-weight: 600;
+}
+
+.progress-percentage {
+    color: var(--primary-color);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-ready {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.status-processing {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
+.status-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.status-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.preview-table th,
+.preview-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.preview-table th {
+    background: var(--gray-50);
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+}
+
+.preview-table td {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.preview-table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    max-width: 400px;
+}
+
+.notification-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.notification-error {
+    background: var(--error-color);
+    color: white;
+}
+
+.notification-info {
+    background: var(--primary-color);
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    max-width: 400px;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    margin: 0 auto 1rem;
+}
+
+.spinner-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid transparent;
+    border-radius: 50%;
+    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.spinner-ring:nth-child(1) {
+    border-top-color: #3b82f6;
+    animation-delay: -0.45s;
+}
+
+.spinner-ring:nth-child(2) {
+    border-right-color: #10b981;
+    animation-delay: -0.3s;
+}
+
+.spinner-ring:nth-child(3) {
+    border-bottom-color: #f59e0b;
+    animation-delay: -0.15s;
+}
+
+.spinner-ring:nth-child(4) {
+    border-left-color: #ef4444;
+    animation-delay: 0s;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.progress-enhanced {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-bar-enhanced {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.loading-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    margin: 0.5rem 0;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title">Carga de Archivos Excel</h1>
+        <p class="page-subtitle">Importa múltiples archivos Excel de aprendices de forma eficiente</p>
+    </div>
+
+    <div class="content-grid">
+        <!-- Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-upload"></i>
+                    Subir Archivos
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt fa-3x"></i>
+                    </div>
+                    <div class="upload-text">Arrastra y suelta archivos aquí</div>
+                    <div class="upload-subtext">o haz clic para seleccionar</div>
+                    <input type="file" id="fileInput" style="display:none" multiple accept=".xlsx,.xls">
+                    <label for="fileInput" class="btn btn-primary">
+                        📁 Seleccionar Archivos
+                    </label>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="progress-status" id="progressStatus">Procesando...</span>
+                        <span class="progress-percentage" id="progressPercentage">0%</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="validateBtn" disabled>
+                        <i class="fas fa-check-circle"></i>
+                        Validar Archivos
+                    </button>
+                    <button class="btn btn-warning" id="processBtn" disabled>
+                        <i class="fas fa-cogs"></i>
+                        Procesar Archivos
+                    </button>
+                </div>
+
+                <!-- Status Indicator -->
+                <div style="margin-top: 1rem;">
+                    <div class="status-indicator status-ready" id="statusIndicator">
+                        <span class="status-dot"></span>
+                        <span id="statusText">Listo para cargar archivos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-file-excel"></i>
+                    Archivos Seleccionados
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="file-list" id="fileList">
+                    <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                        <i class="fas fa-inbox fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>No hay archivos seleccionados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="card" id="statsSection" style="display: none;">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-chart-bar"></i>
+                Estadísticas de Procesamiento
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="stats-grid" id="statsGrid">
+                <!-- Stats will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="card" id="previewSection" style="display: none;">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-eye"></i>
+                Vista Previa de Datos
+            </h2>
+        </div>
+        <div class="card-body">
+            <div style="overflow-x: auto;">
+                <table class="preview-table" id="previewTable">
+                    <!-- Preview will be populated dynamically -->
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-content">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <h3 style="margin-bottom: 0.5rem; color: var(--primary-color);">
+            <i class="fas fa-file-excel me-2"></i>
+            <span id="loadingTitle">Procesando archivos...</span>
+        </h3>
+        <p style="color: var(--gray-600);">
+            <span id="loadingMessage">Por favor, espera un momento.</span>
+        </p>
+        
+        <!-- Barra de progreso mejorada -->
+        <div class="progress-enhanced mt-3">
+            <div class="progress-bar-enhanced" id="loadingProgressBar" style="width: 0%"></div>
+        </div>
+        
+        <!-- Estadísticas en tiempo real -->
+        <div class="loading-stats mt-3" id="loadingStats" style="display: none;">
+            <div class="row text-center">
+                <div class="col-4">
+                    <div class="stat-item">
+                        <i class="fas fa-file text-primary"></i>
+                        <div class="stat-number" id="filesProcessed">0</div>
+                        <div class="stat-label">Procesados</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-item">
+                        <i class="fas fa-database text-success"></i>
+                        <div class="stat-number" id="recordsProcessed">0</div>
+                        <div class="stat-label">Registros</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-item">
+                        <i class="fas fa-percentage text-warning"></i>
+                        <div class="stat-number" id="progressPercent">0%</div>
+                        <div class="stat-label">Progreso</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class SistemaCargaExcel {
+    constructor() {
+        this.files = [];
+        this.fileData = null;
+        this.validationResults = null;
+        this.currentFileIndex = 0;
+        
+        this.initializeElements();
+        this.attachEventListeners();
+    }
+
+    initializeElements() {
+        this.uploadArea = document.getElementById('uploadArea');
+        this.fileInput = document.getElementById('fileInput');
+        this.fileList = document.getElementById('fileList');
+        this.validateBtn = document.getElementById('validateBtn');
+        this.processBtn = document.getElementById('processBtn');
+        this.progressContainer = document.getElementById('progressContainer');
+        this.progressFill = document.getElementById('progressFill');
+        this.progressStatus = document.getElementById('progressStatus');
+        this.progressPercentage = document.getElementById('progressPercentage');
+        this.statusIndicator = document.getElementById('statusIndicator');
+        this.statusText = document.getElementById('statusText');
+        this.statsSection = document.getElementById('statsSection');
+        this.statsGrid = document.getElementById('statsGrid');
+        this.previewSection = document.getElementById('previewSection');
+        this.previewTable = document.getElementById('previewTable');
+        this.loadingOverlay = document.getElementById('loadingOverlay');
+    }
+
+    attachEventListeners() {
+        // Upload area events (solo para drag & drop)
+        this.uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.add('dragover');
+        });
+        
+        this.uploadArea.addEventListener('dragleave', () => {
+            this.uploadArea.classList.remove('dragover');
+        });
+        
+        this.uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.remove('dragover');
+            this.handleFileSelect(e);
+        });
+        
+        // File input event (para el label)
+        this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        
+        // Button events
+        this.validateBtn.addEventListener('click', () => this.validarArchivo());
+        this.processBtn.addEventListener('click', () => this.procesarArchivo());
+    }
+
+    handleFileSelect(event) {
+        const files = event.target.files || event.dataTransfer.files;
+        if (files.length > 0) {
+            this.files = Array.from(files);
+            this.updateFileList();
+            this.enableButtons();
+            this.updateStatus('ready', `${this.files.length} archivo(s) seleccionado(s)`);
+        }
+    }
+
+    updateFileList() {
+        if (this.files.length === 0) {
+            this.fileList.innerHTML = `
+                <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                    <i class="fas fa-inbox fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>No hay archivos seleccionados</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.fileList.innerHTML = this.files.map((file, index) => `
+            <div class="file-item">
+                <div class="file-icon">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${this.formatFileSize(file.size)}</div>
+                </div>
+                <button class="file-remove" onclick="sistemaCargaExcel.removeFile(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    removeFile(index) {
+        this.files.splice(index, 1);
+        this.updateFileList();
+        
+        if (this.files.length === 0) {
+            this.disableButtons();
+            this.updateStatus('ready', 'Listo para cargar archivos');
+        } else {
+            this.updateStatus('ready', `${this.files.length} archivo(s) seleccionado(s)`);
+        }
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    enableButtons() {
+        this.validateBtn.disabled = false;
+        this.processBtn.disabled = false;
+    }
+
+    disableButtons() {
+        this.validateBtn.disabled = true;
+        this.processBtn.disabled = true;
+    }
+
+    updateStatus(status, message) {
+        this.statusIndicator.className = `status-indicator status-${status}`;
+        this.statusText.textContent = message;
+    }
+
+    showProgress(show = true) {
+        this.progressContainer.style.display = show ? 'block' : 'none';
+        if (!show) {
+            this.progressFill.style.width = '0%';
+            this.progressPercentage.textContent = '0%';
+        }
+    }
+
+    updateProgress(percentage, status = 'Procesando...') {
+        this.progressFill.style.width = `${percentage}%`;
+        this.progressPercentage.textContent = `${percentage}%`;
+        this.progressStatus.textContent = status;
+    }
+
+    showLoading(show = true, title = 'Procesando archivos...', message = 'Por favor, espera un momento.') {
+        const overlay = document.getElementById('loadingOverlay');
+        const titleElement = document.getElementById('loadingTitle');
+        const messageElement = document.getElementById('loadingMessage');
+        const statsElement = document.getElementById('loadingStats');
+        
+        if (show) {
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            statsElement.style.display = 'block';
+            overlay.style.display = 'flex';
+            
+            // Resetear estadísticas
+            document.getElementById('filesProcessed').textContent = '0';
+            document.getElementById('recordsProcessed').textContent = '0';
+            document.getElementById('progressPercent').textContent = '0%';
+            document.getElementById('loadingProgressBar').style.width = '0%';
+        } else {
+            overlay.style.display = 'none';
+        }
+    }
+
+    async validarArchivo() {
+        if (this.files.length === 0) {
+            this.showNotification('Por favor, selecciona archivos primero', 'error');
+            return;
+        }
+
+        this.showLoading(true, 'Validando archivos...', `Validando ${this.files.length} archivo(s)...`);
+        
+        try {
+            let totalRows = 0;
+            let validFiles = 0;
+
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                this.updateProgress((i / this.files.length) * 50, `Validando ${file.name}...`);
+                
+                // Actualizar estadísticas
+                document.getElementById('filesProcessed').textContent = i + 1;
+                document.getElementById('progressPercent').textContent = `${Math.round((i / this.files.length) * 50)}%`;
+                document.getElementById('loadingProgressBar').style.width = `${(i / this.files.length) * 50}%`;
+
+                const formData = new FormData();
+                formData.append('archivo', file);
+                
+                // Debug: verificar CSRF token
+                const csrfToken = this.getCookie('csrftoken');
+                console.log('🔐 CSRF Token:', csrfToken);
+                console.log('📁 Enviando archivo:', file.name);
+                console.log('📊 URL: /aprendices/validar-excel/');
+                console.log('📦 FormData contents:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(`  ${key}:`, value);
+                }
+                
+                const response = await fetch('/aprendices/validar-excel/', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                console.log('📋 Response status:', response.status);
+                console.log('📋 Response headers:', response.headers);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('📋 Response data:', data);
+
+                if (data.success) {
+                    totalRows += data.total_rows || 0;
+                    validFiles++;
+                    this.showNotification(`${file.name}: ${data.total_rows} filas válidas`, 'success');
+                } else {
+                    this.showNotification(`Error en ${file.name}: ${data.message}`, 'error');
+                }
+            }
+
+            this.updateProgress(100, 'Validación completada');
+            
+            if (validFiles > 0) {
+                this.validationResults = { total_rows: totalRows, valid_files: validFiles };
+                this.showStatistics(totalRows, validFiles);
+                this.showPreview();
+                this.updateStatus('ready', `${validFiles} archivos validados correctamente`);
+            } else {
+                this.updateStatus('error', 'No se pudo validar ningún archivo');
+            }
+
+        } catch (error) {
+            console.error('❌ Error en validación:', error);
+            console.error('❌ Error completo:', error.stack);
+            this.showNotification(`Error al validar archivos: ${error.message}`, 'error');
+            this.updateStatus('error', 'Error de validación');
+        } finally {
+            setTimeout(() => {
+                this.showLoading(false);
+                this.showProgress(false);
+            }, 1000);
+        }
+    }
+
+    async procesarArchivo() {
+        if (!this.validationResults) {
+            this.showNotification('Por favor, valida los archivos primero', 'error');
+            return;
+        }
+
+        this.showLoading(true, 'Procesando archivos...', `Procesando ${this.files.length} archivo(s) validados...`);
+        this.updateProgress(0, 'Iniciando procesamiento...');
+        
+        // Actualizar estadísticas iniciales
+        document.getElementById('filesProcessed').textContent = '0';
+        document.getElementById('recordsProcessed').textContent = '0';
+        document.getElementById('progressPercent').textContent = '0%';
+        document.getElementById('loadingProgressBar').style.width = '0%';
+
+        try {
+            let totalProcesados = 0;
+            let totalErrores = 0;
+            let totalExtraidosGlobal = 0;
+
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                const progressBase = (i / this.files.length) * 100;
+                this.updateProgress(progressBase, `Procesando ${file.name}...`);
+                
+                // Actualizar estadísticas en tiempo real
+                document.getElementById('filesProcessed').textContent = i + 1;
+                document.getElementById('progressPercent').textContent = `${Math.round(progressBase)}%`;
+                document.getElementById('loadingProgressBar').style.width = `${progressBase}%`;
+
+                const formData = new FormData();
+                formData.append('archivo', file);
+
+                const response = await fetch('/carga-excel/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const nuevos = data.resultados?.nuevos || 0;
+                    const actualizados = data.resultados?.actualizados || 0;
+                    const extraidos = data.resultados?.total_extraidos || 0;
+                    
+                    // Actualizar estadísticas finales
+                    document.getElementById('recordsProcessed').textContent = nuevos + actualizados;
+                    
+                    this.showNotification(`${file.name}: ${nuevos} nuevos, ${actualizados} actualizados`, 'success');
+                    totalExtraidosGlobal += extraidos;
+                    
+                    this.showNotification(
+                        `${file.name}: ${extraidos} extraídos, ${nuevos} nuevos, ${actualizados} actualizados`, 
+                        'success'
+                    );
+                } else {
+                    totalErrores++;
+                    this.showNotification(`Error en ${file.name}: ${data.message}`, 'error');
+                }
+
+                // Update progress within current file
+                const fileProgress = ((i + 1) / this.files.length) * 100;
+                this.updateProgress(fileProgress, `Completado ${i + 1}/${this.files.length} archivos`);
+            }
+
+            this.updateProgress(100, 'Procesamiento completado');
+            
+            const tasaExito = totalExtraidosGlobal > 0 ? 
+                ((totalProcesados / totalExtraidosGlobal) * 100).toFixed(1) : 0;
+
+            if (totalErrores === 0) {
+                this.updateStatus('success', `${this.files.length} archivos procesados correctamente`);
+                this.showNotification(
+                    `¡Éxito! ${totalExtraidosGlobal} aprendices extraídos, ${totalProcesados} procesados (${tasaExito}% éxito)`, 
+                    'success'
+                );
+                
+                setTimeout(() => {
+                    window.location.href = '/resultado-carga/';
+                }, 3000);
+            } else {
+                this.updateStatus('warning', `${totalErrores} archivos con errores`);
+                this.showNotification(
+                    `${totalErrores} archivos con errores. ${totalExtraidosGlobal} extraídos, ${totalProcesados} procesados`, 
+                    'warning'
+                );
+            }
+
+        } catch (error) {
+            console.error('Error en procesamiento:', error);
+            this.showNotification('Error al procesar archivos', 'error');
+            this.updateStatus('error', 'Error de procesamiento');
+        } finally {
+            setTimeout(() => {
+                this.showLoading(false);
+                this.showProgress(false);
+            }, 2000);
+        }
+    }
+
+    showStatistics(totalRows, validFiles) {
+        this.statsSection.style.display = 'block';
+        this.statsGrid.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-value">${this.files.length}</div>
+                <div class="stat-label">Archivos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${totalRows}</div>
+                <div class="stat-label">Filas Totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${validFiles}</div>
+                <div class="stat-label">Válidos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${this.formatFileSize(this.files.reduce((sum, file) => sum + file.size, 0))}</div>
+                <div class="stat-label">Tamaño Total</div>
+            </div>
+        `;
+    }
+
+    showPreview() {
+        this.previewSection.style.display = 'block';
+        this.previewTable.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Documento</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--gray-500);">
+                        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+                        Los archivos han sido validados correctamente
+                    </td>
+                </tr>
+            </tbody>
+        `;
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideIn 0.3s ease reverse';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+}
+
+// Initialize the system
+document.addEventListener('DOMContentLoaded', () => {
+    window.sistemaCargaExcel = new SistemaCargaExcel();
+});
+</script>
+{% endblock %}

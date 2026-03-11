@@ -1,0 +1,235 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - Gestión SENA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt text-primary me-2"></i>
+            Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Estadísticas Principales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <a href="{% url 'lista_aprendices' %}" class="card bg-primary text-white text-decoration-none dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.total_aprendices }}</h4>
+                        <p class="card-text">Total Aprendices</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{% url 'lista_aprendices' %}?estado=DISPONIBLE" class="card bg-success text-white text-decoration-none dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.por_estado.DISPONIBLE }}</h4>
+                        <p class="card-text">Disponibles</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{% url 'lista_aprendices' %}?estado=INHABILITADO_ACT" class="card bg-danger text-white text-decoration-none dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.por_estado.INHABILITADO_ACT }}</h4>
+                        <p class="card-text">Inhabilitados</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-ban fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{% url 'lista_aprendices' %}?estado=PROCESO_SELECCION" class="card bg-warning text-white text-decoration-none dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.por_estado.PROCESO_SELECCION }}</h4>
+                        <p class="card-text">Proceso Selección</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-clock fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Segunda Fila de Estados -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <a href="{% url 'lista_aprendices' %}?estado=PROCESO_ABIERTO" class="card bg-secondary text-white text-decoration-none dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.por_estado.PROCESO_ABIERTO }}</h4>
+                        <p class="card-text">Proceso Abierto</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-folder-open fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-6">
+        <a href="{% url 'lista_aprendices' %}?estado=CONTRATO_NO_REGISTRADO" class="card bg-dark text-white text-decoration-none dashboard-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.por_estado.CONTRATO_NO_REGISTRADO }}</h4>
+                        <p class="card-text">Contrato no Registrado</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-contract fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<style>
+.dashboard-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: block;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.1);
+}
+
+.dashboard-card .card-body {
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover .card-body {
+    background: rgba(255, 255, 255, 0.1);
+}
+</style>
+
+<div class="row">
+    <!-- Gráfico de Estados -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Aprendices por Estado
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="estadosChart" width="800" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Últimas Cargas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Últimas Cargas de Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if ultimas_cargas %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Archivo</th>
+                                    <th>Total</th>
+                                    <th>Nuevos</th>
+                                    <th>Actualizados</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for carga in ultimas_cargas %}
+                                    <tr>
+                                        <td>{{ carga.fecha_carga|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ carga.filename }}</td>
+                                        <td>{{ carga.total_registros }}</td>
+                                        <td class="text-success">{{ carga.registros_nuevos }}</td>
+                                        <td class="text-info">{{ carga.registros_actualizados }}</td>
+                                        <td>
+                                            {% if carga.errores %}
+                                                <span class="badge bg-warning">Con errores</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Exitosa</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No hay cargas registradas</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gráfico de estados
+const ctx = document.getElementById('estadosChart').getContext('2d');
+const estadosChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ estados_labels|safe }},
+        datasets: [{
+            data: {{ estados_data|safe }},
+            backgroundColor: {{ colores|safe }},
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

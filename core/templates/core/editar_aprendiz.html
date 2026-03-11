@@ -1,0 +1,394 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Editar {{ aprendiz.nombre_completo }} - Gestión SENA{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Efecto de carga para el formulario de edición
+    const editForm = document.querySelector('form[method="post"]');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                window.loadingManager.setButtonLoading(submitBtn, 'Guardando cambios...', 'loading-save');
+                window.loadingManager.showLoading('Guardando cambios', 'Actualizando información del aprendiz...');
+            }
+        });
+    }
+
+    // Efecto para validación en tiempo real
+    const formInputs = document.querySelectorAll('input, select, textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            // Simular validación con efecto sutil
+            this.classList.add('dropdown-loading');
+            setTimeout(() => {
+                this.classList.remove('dropdown-loading');
+            }, 300);
+        });
+    });
+
+    // Efecto para botones de acción
+    document.querySelectorAll('.btn-danger').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (confirm('¿Estás seguro de realizar esta acción?')) {
+                window.loadingManager.setButtonLoading(this, 'Procesando...', 'loading-delete');
+            } else {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-edit text-primary me-2"></i>
+                Editar Aprendiz
+            </h1>
+            <div>
+                <a href="{% url 'detalle_aprendiz' aprendiz.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>
+                    Editar Información de {{ aprendiz.nombre_completo }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Información Personal -->
+                    <h6 class="mb-3 text-primary">
+                        <i class="fas fa-id-card me-2"></i>Información Personal
+                    </h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.tipo_documento.id_for_label }}" class="form-label">
+                                    {{ form.tipo_documento.label }}
+                                </label>
+                                {{ form.tipo_documento }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.numero_documento.id_for_label }}" class="form-label">
+                                    {{ form.numero_documento.label }}
+                                </label>
+                                {{ form.numero_documento }}
+                                {% if form.numero_documento.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.numero_documento.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.nombres.id_for_label }}" class="form-label">
+                                    {{ form.nombres.label }}
+                                </label>
+                                {{ form.nombres }}
+                                {% if form.nombres.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.nombres.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.apellidos.id_for_label }}" class="form-label">
+                                    {{ form.apellidos.label }}
+                                </label>
+                                {{ form.apellidos }}
+                                {% if form.apellidos.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.apellidos.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    {{ form.email.label }}
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.email.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.telefono.id_for_label }}" class="form-label">
+                                    {{ form.telefono.label }}
+                                </label>
+                                {{ form.telefono }}
+                                {% if form.telefono.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.telefono.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Información Académica -->
+                    <h6 class="mb-3 text-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Información Académica
+                    </h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.especializacion.id_for_label }}" class="form-label">
+                                    {{ form.especializacion.label }}
+                                </label>
+                                {{ form.especializacion }}
+                                {% if form.especializacion.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.especializacion.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.ficha.id_for_label }}" class="form-label">
+                                    {{ form.ficha.label }}
+                                </label>
+                                {{ form.ficha }}
+                                {% if form.ficha.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.ficha.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.fecha_inicio_etapa_practica.id_for_label }}" class="form-label">
+                                    {{ form.fecha_inicio_etapa_practica.label }}
+                                </label>
+                                {{ form.fecha_inicio_etapa_practica }}
+                                {% if form.fecha_inicio_etapa_practica.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.fecha_inicio_etapa_practica.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.fecha_fin_etapa_practica.id_for_label }}" class="form-label">
+                                    {{ form.fecha_fin_etapa_practica.label }}
+                                </label>
+                                {{ form.fecha_fin_etapa_practica }}
+                                {% if form.fecha_fin_etapa_practica.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.fecha_fin_etapa_practica.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Estado y Empresa -->
+                    <h6 class="mb-3 text-primary">
+                        <i class="fas fa-building me-2"></i>Estado y Empresa
+                    </h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.estado.id_for_label }}" class="form-label">
+                                    {{ form.estado.label }}
+                                </label>
+                                {{ form.estado }}
+                                {% if form.estado.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.estado.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.empresa_vinculada.id_for_label }}" class="form-label">
+                                    {{ form.empresa_vinculada.label }}
+                                </label>
+                                {{ form.empresa_vinculada }}
+                                {% if form.empresa_vinculada.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.empresa_vinculada.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Observaciones -->
+                    <h6 class="mb-3 text-primary">
+                        <i class="fas fa-sticky-note me-2"></i>Observaciones
+                    </h6>
+                    <div class="mb-4">
+                        <label for="{{ form.observaciones.id_for_label }}" class="form-label">
+                            {{ form.observaciones.label }}
+                        </label>
+                        {{ form.observaciones }}
+                        {% if form.observaciones.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.observaciones.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Cambios
+                        </button>
+                        <a href="{% url 'detalle_aprendiz' aprendiz.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información Actual
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-user-circle fa-4x text-muted"></i>
+                </div>
+                <h6 class="text-center">{{ aprendiz.nombre_completo }}</h6>
+                <p class="text-center text-muted">{{ aprendiz.numero_documento }}</p>
+                
+                <hr>
+                
+                <p><strong>Estado actual:</strong></p>
+                <p>
+                    <span class="badge 
+                        {% if aprendiz.estado == 'DISPONIBLE' %}bg-success
+                        {% elif aprendiz.estado == 'INHABILITADO_ACT' %}bg-danger
+                        {% elif aprendiz.estado == 'PROCESO_SELECCION' %}bg-warning
+                        {% elif aprendiz.estado == 'PROCESO_ABIERTO' %}bg-info
+                        {% else %}bg-secondary{% endif %}">
+                        {{ aprendiz.get_estado_display }}
+                    </span>
+                </p>
+                
+                {% if aprendiz.empresa_vinculada %}
+                    <p><strong>Empresa:</strong><br>
+                    <small>{{ aprendiz.empresa_vinculada.razon_social }}</small></p>
+                {% endif %}
+                
+                <p><strong>Especialización:</strong><br>
+                <small>{{ aprendiz.especializacion|truncatechars:50 }}</small></p>
+                
+                <p><strong>Última actualización:</strong><br>
+                <small>{{ aprendiz.fecha_actualizacion|date:"d/m/Y H:i" }}</small></p>
+            </div>
+        </div>
+        
+        <!-- Tips -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Los campos marcados con * son obligatorios
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Usa el formato DD/MM/AAAA para las fechas
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        El email debe tener un formato válido
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Puedes dejar la empresa en blanco si no está vinculado
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-formato de fechas
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value) {
+                const date = new Date(this.value);
+                const formattedDate = date.toLocaleDateString('es-CO');
+                console.log('Fecha seleccionada:', formattedDate);
+            }
+        });
+    });
+    
+    // Validación de email en tiempo real
+    const emailInput = document.getElementById('{{ form.email.id_for_label }}');
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value;
+            if (email && !email.includes('@')) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

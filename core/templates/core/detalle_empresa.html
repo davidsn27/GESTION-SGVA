@@ -1,0 +1,299 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ empresa.razon_social }} - Gestión SENA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-building text-primary me-2"></i>
+                {{ empresa.razon_social }}
+            </h1>
+            <div>
+                <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Información Principal -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información de la Empresa
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>NIT:</strong> {{ empresa.nit }}</p>
+                        <p><strong>Razón Social:</strong> {{ empresa.razon_social }}</p>
+                        <p><strong>Sector Económico:</strong> 
+                            {% if empresa.sector_economico %}
+                                {{ empresa.sector_economico }}
+                            {% else %}
+                                <span class="text-muted">No especificado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Teléfono:</strong> 
+                            {% if empresa.telefono %}
+                                <a href="tel:{{ empresa.telefono }}">{{ empresa.telefono }}</a>
+                            {% else %}
+                                <span class="text-muted">No registrado</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Email:</strong> 
+                            {% if empresa.email %}
+                                <a href="mailto:{{ empresa.email }}">{{ empresa.email }}</a>
+                            {% else %}
+                                <span class="text-muted">No registrado</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Fecha de Registro:</strong> {{ empresa.fecha_registro|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                {% if empresa.direccion %}
+                    <div class="mt-3">
+                        <strong>Dirección:</strong>
+                        <p class="mt-1">{{ empresa.direccion }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Estadísticas
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-users fa-4x text-primary"></i>
+                </div>
+                <h3>{{ total_aprendices }}</h3>
+                <p class="text-muted">Aprendices Vinculados</p>
+                
+                {% if total_aprendices > 0 %}
+                    <div class="mt-3">
+                        <a href="{% url 'lista_aprendices' %}?empresa={{ empresa.pk }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-users me-2"></i>Ver Todos
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aprendices por Estado -->
+{% if aprendices %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Aprendices por Estado ({{ total_aprendices }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if por_estado %}
+                        <div class="row">
+                            {% for estado, aprendices_estado in por_estado.items %}
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">{{ estado }}</h6>
+                                            <h4 class="text-primary">{{ aprendices_estado|length }}</h4>
+                                            <small class="text-muted">aprendiz{{ aprendices_estado|length|pluralize }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Lista detallada de aprendices -->
+                        <div class="mt-4">
+                            <h6 class="mb-3">Lista Completa de Aprendices</h6>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Documento</th>
+                                            <th>Nombre</th>
+                                            <th>Especialización</th>
+                                            <th>Estado</th>
+                                            <th>Práctica</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for aprendiz in aprendices %}
+                                            <tr>
+                                                <td>{{ aprendiz.numero_documento }}</td>
+                                                <td>
+                                                    <a href="{% url 'detalle_aprendiz' aprendiz.pk %}" 
+                                                       class="text-decoration-none">
+                                                        {{ aprendiz.nombre_completo }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ aprendiz.especializacion|truncatechars:30 }}</td>
+                                                <td>
+                                                    <span class="badge 
+                                                        {% if aprendiz.estado == 'DISPONIBLE' %}bg-success
+                                                        {% elif aprendiz.estado == 'INHABILITADO_ACT' %}bg-danger
+                                                        {% elif aprendiz.estado == 'PROCESO_SELECCION' %}bg-warning
+                                                        {% elif aprendiz.estado == 'PROCESO_ABIERTO' %}bg-info
+                                                        {% else %}bg-secondary{% endif %}">
+                                                        {{ aprendiz.get_estado_display }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if aprendiz.dias_restantes_practica is not None %}
+                                                        {% if aprendiz.dias_restantes_practica <= 30 %}
+                                                            <span class="badge bg-warning">{{ aprendiz.dias_restantes_practica }} días</span>
+                                                        {% else %}
+                                                            <span class="text-muted">{{ aprendiz.dias_restantes_practica }} días</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-muted">N/A</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'detalle_aprendiz' aprendiz.pk %}" 
+                                                       class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Sin aprendices vinculados</h5>
+                    <p class="text-muted">Esta empresa aún no tiene aprendices asignados.</p>
+                    <a href="{% url 'carga_excel' %}" class="btn btn-primary">
+                        <i class="fas fa-file-excel me-2"></i>Cargar Aprendices
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Acciones Rápidas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Acciones Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{% url 'lista_aprendices' %}?empresa={{ empresa.pk }}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-users me-2"></i>Ver Aprendices
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{% url 'carga_excel' %}" class="btn btn-outline-success">
+                                <i class="fas fa-file-excel me-2"></i>Cargar Más
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="/admin/core/empresa/{{ empresa.pk }}/change/" 
+                               target="_blank" class="btn btn-outline-secondary">
+                                <i class="fas fa-edit me-2"></i>Editar Empresa
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-info">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animación para las tarjetas de estado
+    const stateCards = document.querySelectorAll('.card.border-primary');
+    stateCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'all 0.3s ease';
+            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+    
+    // Resaltar aprendices con práctica por terminar
+    const warningBadges = document.querySelectorAll('.badge.bg-warning');
+    warningBadges.forEach(badge => {
+        setInterval(() => {
+            badge.style.opacity = badge.style.opacity === '0.5' ? '1' : '0.5';
+        }, 1000);
+    });
+    
+    // Efecto hover en filas de tabla
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+            this.style.transition = 'background-color 0.2s ease';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+});
+</script>
+{% endblock %}

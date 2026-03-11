@@ -1,0 +1,295 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Lista de Empresas - Gestión SENA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-building text-primary me-2"></i>
+                Lista de Empresas
+            </h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver al Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3 class="card-title">{{ empresas|length }}</h3>
+                <p class="card-text">Total Empresas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3 class="card-title">
+                    {% if empresas %}
+                        {{ empresas.0.total_aprendices }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </h3>
+                <p class="card-text">Aprendices en Top Empresa</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3 class="card-title">
+                    {% widthratio empresas|length 1 1 %}
+                </h3>
+                <p class="card-text">Promedio Aprendices/Empresa</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Empresas -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Empresas Registradas
+        </h5>
+        <span class="badge bg-secondary">{{ empresas|length }} empresas</span>
+    </div>
+    <div class="card-body">
+        {% if empresas %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>NIT</th>
+                            <th>Razón Social</th>
+                            <th>Sector Económico</th>
+                            <th>Teléfono</th>
+                            <th>Email</th>
+                            <th>Aprendices</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empresa in empresas %}
+                            <tr>
+                                <td><strong>{{ empresa.nit }}</strong></td>
+                                <td>
+                                    <a href="{% url 'detalle_empresa' empresa.pk %}" class="text-decoration-none">
+                                        {{ empresa.razon_social }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if empresa.sector_economico %}
+                                        {{ empresa.sector_economico }}
+                                    {% else %}
+                                        <span class="text-muted">No especificado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if empresa.telefono %}
+                                        <a href="tel:{{ empresa.telefono }}">{{ empresa.telefono }}</a>
+                                    {% else %}
+                                        <span class="text-muted">No registrado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if empresa.email %}
+                                        <a href="mailto:{{ empresa.email }}">{{ empresa.email|truncatechars:25 }}</a>
+                                    {% else %}
+                                        <span class="text-muted">No registrado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill">{{ empresa.total_aprendices }}</span>
+                                    {% if empresa.total_aprendices > 0 %}
+                                        <small class="text-muted">aprendiz{{ empresa.total_aprendices|pluralize }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'detalle_empresa' empresa.pk %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if empresa.total_aprendices > 0 %}
+                                            <a href="{% url 'lista_aprendices' %}?empresa={{ empresa.pk }}" 
+                                               class="btn btn-sm btn-outline-info" title="Ver aprendices">
+                                                <i class="fas fa-users"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginación -->
+            {% if empresas.has_other_pages %}
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center">
+                        {% if empresas.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ empresas.previous_page_number }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in empresas.paginator.page_range %}
+                            {% if empresas.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > empresas.number|add:'-3' and num < empresas.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if empresas.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ empresas.next_page_number }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ empresas.paginator.num_pages }}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No hay empresas registradas</h5>
+                <p class="text-muted">Las empresas se crearán automáticamente al cargar aprendices desde Excel.</p>
+                <a href="{% url 'carga_excel' %}" class="btn btn-primary">
+                    <i class="fas fa-file-excel me-2"></i>Cargar Aprendices
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Resumen Estadístico -->
+{% if empresas %}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Top 5 Empresas con más Aprendices
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for empresa in empresas|slice:":5" %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>{{ empresa.razon_social|truncatechars:35 }}</strong>
+                                <br>
+                                <small class="text-muted">{{ empresa.nit }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary rounded-pill">{{ empresa.total_aprendices }}</span>
+                                {% if forloop.counter0 == 0 %}
+                                    <i class="fas fa-trophy text-warning ms-1"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Información General
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total empresas:</strong> {{ empresas|length }}</p>
+                    <p><strong>Empresas con aprendices:</strong> 
+                        {% with con_aprendices=empresas|length %}
+                            {{ con_aprendices }}
+                        {% endwith %}
+                    </p>
+                    <p><strong>Total aprendices vinculados:</strong> 
+                        {% if empresas %}
+                            {% for empresa in empresas %}{% if forloop.last %}{{ empresa.total_aprendices }}{% endif %}{% endfor %}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </p>
+                    <p><strong>Fecha de registro más reciente:</strong><br>
+                        <small class="text-muted">
+                            {% if empresas %}
+                                {% for empresa in empresas %}
+                                    {% if forloop.first %}
+                                        {{ empresa.fecha_registro|date:"d/m/Y H:i" }}
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                No disponible
+                            {% endif %}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Resaltar la empresa con más aprendices
+    const tableRows = document.querySelectorAll('tbody tr');
+    if (tableRows.length > 0) {
+        // La primera fila ya es la que tiene más aprendices (orden descendente)
+        tableRows[0].classList.add('table-warning');
+    }
+    
+    // Animación para los badges
+    const badges = document.querySelectorAll('.badge');
+    badges.forEach(badge => {
+        badge.style.transition = 'all 0.3s ease';
+    });
+    
+    // Efecto hover en las filas
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.01)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

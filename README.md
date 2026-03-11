@@ -223,22 +223,74 @@ python manage.py collectstatic
 
 ## Despliegue
 
-### Producción
-1. Configurar `DEBUG = False`
-2. Establecer `ALLOWED_HOSTS`
-3. Configurar base de datos producción
-4. Recolectar archivos estáticos
-5. Configurar servidor web (Nginx + Gunicorn)
+### Producción (Heroku/Render/ Railway)
+
+1. **Configurar variables de entorno**:
+   ```bash
+   # En producción
+   DEBUG=False
+   ALLOWED_HOSTS=tu-dominio.com,www.tu-dominio.com
+   SECRET_KEY=tu-clave-secreta-muy-larga
+   FORCE_SSL=True
+   SESSION_COOKIE_SECURE=True
+   CSRF_COOKIE_SECURE=True
+   ```
+
+2. **Archivos de configuración**:
+   - `runtime.txt`: Especifica Python 3.12
+   - `Procfile`: Configura Gunicorn como servidor
+   - `requirements.txt`: Incluye gunicorn y whitenoise
+
+3. **Comandos de deploy**:
+   ```bash
+   # Recolectar archivos estáticos
+   python manage.py collectstatic --noinput
+   
+   # Aplicar migraciones
+   python manage.py migrate
+   
+   # Iniciar servidor
+   gunicorn sena_gestion.wsgi
+   ```
+
+4. **Log esperado**:
+   ```
+   Starting gunicorn
+   Listening at: http://0.0.0.0
+   Application ready
+   ```
+
+### Variables de Entorno para Producción
+
+| Variable | Valor | Descripción |
+|----------|--------|-------------|
+| `DEBUG` | `False` | Desactiva modo debug |
+| `ALLOWED_HOSTS` | `dominio.com,www.dominio.com` | Dominios permitidos |
+| `SECRET_KEY` | `clave-secreta` | Clave de seguridad Django |
+| `FORCE_SSL` | `True` | Forzar HTTPS |
+| `DB_NAME` | `nombre_db` | Nombre base de datos |
+| `DB_USER` | `usuario` | Usuario BD |
+| `DB_PASSWORD` | `contraseña` | Contraseña BD |
+| `DB_HOST` | `host` | Servidor BD |
+| `DB_PORT` | `5432` | Puerto BD |
+
+### Configuración de Seguridad
+
+El proyecto incluye configuración automática para producción:
+- ✅ **Whitenoise**: Sirve archivos estáticos eficientemente
+- ✅ **Seguridad SSL**: Cookies seguras y HSTS
+- ✅ **Headers de seguridad**: XSS y Content-Type protection
+- ✅ **Variables de entorno**: Configuración sensible fuera del código
 
 ### Docker
 ```dockerfile
-FROM python:3.9
+FROM python:3.12
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn", "sena_gestion.wsgi"]
 ```
 
 ## Contribuir

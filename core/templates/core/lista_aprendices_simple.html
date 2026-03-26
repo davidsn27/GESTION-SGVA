@@ -1,0 +1,482 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+{% csrf_token %}
+
+<!-- Animación de carga -->
+<div id="loading-animation" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<div class="container mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        <h1 class="mb-0">
+            <i class="fas fa-users text-primary me-2"></i>
+            Lista de Aprendices
+        </h1>
+    </div>
+    
+    <div>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="estado" class="form-label">Filtrar por Estado:</label>
+                    <select name="estado" id="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="Disponible" {% if estado_filtro == 'Disponible' %}selected{% endif %}>Disponible</option>
+                        <option value="Aprendiz Aplica" {% if estado_filtro == 'Aprendiz Aplica' %}selected{% endif %}>Aprendiz Aplica</option>
+                        <option value="Empresa Solicita" {% if estado_filtro == 'Empresa Solicita' %}selected{% endif %}>Empresa Solicita</option>
+                        <option value="En Proceso de Selección" {% if estado_filtro == 'En Proceso de Selección' %}selected{% endif %}>En Proceso de Selección</option>
+                        <option value="Proceso de Selección Abierto" {% if estado_filtro == 'Proceso de Selección Abierto' %}selected{% endif %}>Proceso de Selección Abierto</option>
+                        <option value="Contratado" {% if estado_filtro == 'Contratado' %}selected{% endif %}>Contratado</option>
+                        <option value="Final Contrato" {% if estado_filtro == 'Final Contrato' %}selected{% endif %}>Final Contrato</option>
+                        <option value="Cancelado" {% if estado_filtro == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                        <option value="Alumno Retirado" {% if estado_filtro == 'Alumno Retirado' %}selected{% endif %}>Alumno Retirado</option>
+                        <option value="Aplazado" {% if estado_filtro == 'Aplazado' %}selected{% endif %}>Aplazado</option>
+                        <option value="Pendiente Por Certificar" {% if estado_filtro == 'Pendiente Por Certificar' %}selected{% endif %}>Pendiente Por Certificar</option>
+                        <option value="Bajo Rendimiento Académico" {% if estado_filtro == 'Bajo Rendimiento Académico' %}selected{% endif %}>Bajo Rendimiento Académico</option>
+                        <option value="Aprendiz no interesado en contrato" {% if estado_filtro == 'Aprendiz no interesado en contrato' %}selected{% endif %}>Aprendiz no interesado en contrato</option>
+                        <option value="Inhabilitado Por Actualización" {% if estado_filtro == 'Inhabilitado Por Actualización' %}selected{% endif %}>Inhabilitado Por Actualización</option>
+                        <option value="Contrato No Registrado" {% if estado_filtro == 'Contrato No Registrado' %}selected{% endif %}>Contrato No Registrado</option>
+                        <option value="Fallecido" {% if estado_filtro == 'Fallecido' %}selected{% endif %}>Fallecido</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Botones de acción masiva -->
+<div class="card mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-danger me-2" id="btnEliminarSeleccionados" disabled onclick="eliminarSeleccionados()">
+                <i class="fas fa-trash me-2"></i>Eliminar Seleccionados (<span id="contadorSeleccionados">0</span>)
+            </button>
+        </div>
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-outline-secondary me-2" onclick="seleccionarTodos()">
+                <i class="fas fa-check-square me-2"></i>Seleccionar Todos
+            </button>
+            <button type="button" class="btn btn-outline-secondary me-2" onclick="deseleccionarTodos()">
+                <i class="fas fa-square me-2"></i>Deseleccionar Todos
+            </button>
+            <div class="ms-3">
+                <span class="badge bg-primary" id="indicadorSeleccion">0 seleccionados</span>
+            </div>
+        </div>
+        <div>
+            <span class="text-muted">Total aprendices: {{ aprendices|length }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Aprendices -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="tablaAprendices">
+                <thead class="table-dark">
+                    <tr>
+                        <th width="50px">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2" id="checkboxSelectAll">
+                                <small class="text-muted">({{ aprendices|length }})</small>
+                            </div>
+                        </th>
+                        <th>Nombre</th>
+                        <th>Documento</th>
+                        <th>Programa</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aprendiz in aprendices %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input checkbox-aprendiz" 
+                                   value="{{ aprendiz.id }}" 
+                                   data-nombre="{{ aprendiz.nombre }}"
+                                   onchange="actualizarContador()">
+                        </td>
+                        <td>{{ aprendiz.nombre }}</td>
+                        <td>{{ aprendiz.documento }}</td>
+                        <td>{{ aprendiz.programa }}</td>
+                        <td>
+                            <span class="badge estado-badge" data-estado="{{ aprendiz.estado }}">
+                                {{ aprendiz.estado }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'detalle_aprendiz' aprendiz.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'editar_aprendiz' aprendiz.id %}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{% url 'eliminar_aprendiz' aprendiz.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" 
+                                            onclick="return confirm('¿Estás seguro de eliminar a {{ aprendiz.nombre }}?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No se encontraron aprendices</h4>
+                            <p class="text-muted">Intenta ajustar los filtros o carga nuevos datos desde Excel.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!-- Mensajes de proceso -->
+<div id="mensajeProceso" class="alert alert-info mt-3" style="display: none;"></div>
+
+<style>
+.estado-badge {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+}
+
+/* Colores de badges por estado */
+.estado-badge[data-estado="Disponible"] { background-color: #28a745; color: white; }
+.estado-badge[data-estado="Aprendiz Aplica"] { background-color: #17a2b8; color: white; }
+.estado-badge[data-estado="Empresa Solicita"] { background-color: #ffc107; color: black; }
+.estado-badge[data-estado="En Proceso de Selección"] { background-color: #007bff; color: white; }
+.estado-badge[data-estado="Proceso de Selección Abierto"] { background-color: #6f42c1; color: white; }
+.estado-badge[data-estado="Contratado"] { background-color: #28a745; color: white; }
+.estado-badge[data-estado="Final Contrato"] { background-color: #6c757d; color: white; }
+.estado-badge[data-estado="Cancelado"] { background-color: #dc3545; color: white; }
+.estado-badge[data-estado="Alumno Retirado"] { background-color: #343a40; color: white; }
+.estado-badge[data-estado="Aplazado"] { background-color: #ffc107; color: black; }
+.estado-badge[data-estado="Pendiente Por Certificar"] { background-color: #17a2b8; color: white; }
+.estado-badge[data-estado="Bajo Rendimiento Académico"] { background-color: #e83e8c; color: white; }
+.estado-badge[data-estado="Aprendiz no interesado en contrato"] { background-color: #fd7e14; color: white; }
+.estado-badge[data-estado="Inhabilitado Por Actualización"] { background-color: #dc3545; color: white; }
+.estado-badge[data-estado="Contrato No Registrado"] { background-color: #6c757d; color: white; }
+.estado-badge[data-estado="Fallecido"] { background-color: #343a40; color: white; }
+</style>
+
+<script>
+// Función para seleccionar TODOS los aprendices de la base de datos
+function seleccionarTodos() {
+    console.log('🔥 Función seleccionarTodos llamada');
+    
+    const checkboxes = document.querySelectorAll('.checkbox-aprendiz');
+    const checkboxPrincipal = document.getElementById('checkboxSelectAll');
+    
+    // Marcar checkbox principal
+    checkboxPrincipal.checked = true;
+    checkboxPrincipal.indeterminate = false;
+    
+    // Obtener todos los IDs de aprendices de la base de datos
+    fetch('/obtener-todos-ids-aprendices/', {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        console.log('📥 Respuesta de IDs:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📄 Datos recibidos:', data);
+        if (data.success && data.ids) {
+            // Limpiar checkboxes existentes
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+            });
+            
+            // Eliminar checkboxes ocultos anteriores
+            document.querySelectorAll('.checkbox-aprendiz.d-none').forEach(cb => cb.remove());
+            const contenedorAnterior = document.getElementById('checkboxes-todos');
+            if (contenedorAnterior) {
+                contenedorAnterior.remove();
+            }
+            
+            // Crear checkboxes para todos los aprendices
+            const contenedor = document.createElement('div');
+            contenedor.id = 'checkboxes-todos';
+            contenedor.style.display = 'none';
+            contenedor.innerHTML = data.ids.map(id => 
+                `<input type="checkbox" class="form-check-input checkbox-aprendiz d-none" value="${id}" checked>`
+            ).join('');
+            
+            // Agregar al DOM
+            document.body.appendChild(contenedor);
+            
+            // Actualizar contador
+            actualizarContador();
+            
+            // Mostrar notificación
+            mostrarNotificacionGlobal(data.ids.length);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error al obtener todos los IDs:', error);
+        // Fallback: seleccionar solo los visibles
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        actualizarContador();
+    });
+}
+
+// Función para deseleccionar todos los checkboxes
+function deseleccionarTodos() {
+    const checkboxes = document.querySelectorAll('.checkbox-aprendiz');
+    const checkboxPrincipal = document.getElementById('checkboxSelectAll');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    checkboxPrincipal.checked = false;
+    actualizarContador();
+}
+
+// Función para alternar selección del checkbox principal
+function toggleSeleccionarTodos() {
+    const checkboxPrincipal = document.getElementById('checkboxSelectAll');
+    const checkboxes = document.querySelectorAll('.checkbox-aprendiz');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checkboxPrincipal.checked;
+    });
+    
+    actualizarContador();
+}
+
+// Función para actualizar el contador de seleccionados
+function actualizarContador() {
+    // Contar todos los checkboxes seleccionados (visibles y ocultos)
+    const checkboxesSeleccionados = document.querySelectorAll('.checkbox-aprendiz:checked');
+    const contador = checkboxesSeleccionados.length;
+    const contadorElement = document.getElementById('contadorSeleccionados');
+    
+    if (contadorElement) {
+        contadorElement.textContent = contador;
+        
+        // Actualizar texto del botón según la cantidad seleccionada
+        const botonEliminar = document.getElementById('btnEliminarSeleccionados');
+        if (botonEliminar) {
+            if (contador === 0) {
+                botonEliminar.innerHTML = '<i class="fas fa-trash me-2"></i>Eliminar Seleccionados (<span id="contadorSeleccionados">0</span>)';
+                botonEliminar.disabled = true;
+            } else {
+                botonEliminar.innerHTML = `<i class="fas fa-trash me-2"></i>Eliminar Seleccionados (<span id="contadorSeleccionados">${contador}</span>)`;
+                botonEliminar.disabled = false;
+            }
+        }
+        
+        // Actualizar estado del checkbox principal
+        const checkboxPrincipal = document.getElementById('checkboxSelectAll');
+        if (checkboxPrincipal) {
+            const totalCheckboxes = document.querySelectorAll('.checkbox-aprendiz').length;
+            if (contador === 0) {
+                checkboxPrincipal.checked = false;
+                checkboxPrincipal.indeterminate = false;
+            } else if (contador === totalCheckboxes) {
+                checkboxPrincipal.checked = true;
+                checkboxPrincipal.indeterminate = false;
+            } else {
+                checkboxPrincipal.checked = false;
+                checkboxPrincipal.indeterminate = true;
+            }
+        }
+        
+        // Actualizar indicador visual
+        const indicador = document.getElementById('indicadorSeleccion');
+        if (indicador) {
+            if (contador === 0) {
+                indicador.textContent = '0 seleccionados';
+            } else if (contador === 1) {
+                indicador.textContent = '1 seleccionado';
+            } else {
+                indicador.textContent = `${contador} seleccionados`;
+            }
+        }
+    }
+}
+
+// Función para eliminar TODOS los aprendices seleccionados
+function eliminarSeleccionados() {
+    console.log('🔥 Función eliminarSeleccionados llamada');
+    
+    // Obtener todos los checkboxes seleccionados (visibles y ocultos)
+    const checkboxesSeleccionados = document.querySelectorAll('.checkbox-aprendiz:checked');
+    console.log('📊 Checkboxes seleccionados:', checkboxesSeleccionados.length);
+    
+    if (checkboxesSeleccionados.length === 0) {
+        alert('No hay aprendices seleccionados');
+        return;
+    }
+    
+    if (!confirm(`¿Estás seguro de eliminar ${checkboxesSeleccionados.length} aprendices? Esta acción es IRREVERSIBLE.`)) {
+        return;
+    }
+    
+    // Mostrar mensaje de proceso
+    const mensajeProceso = document.getElementById('mensajeProceso');
+    if (mensajeProceso) {
+        mensajeProceso.style.display = 'block';
+        mensajeProceso.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Eliminando aprendices...';
+    }
+    
+    // Recopilar IDs de todos los checkboxes seleccionados
+    const idsSeleccionados = Array.from(checkboxesSeleccionados).map(cb => cb.value);
+    console.log('🆔 IDs a eliminar:', idsSeleccionados.slice(0, 5), '...'); // Mostrar primeros 5
+    
+    // Enviar petición para eliminar todos los aprendices seleccionados
+    const formData = new FormData();
+    idsSeleccionados.forEach(id => {
+        formData.append('aprendices_ids', id);
+    });
+    
+    console.log('📤 Enviando petición a:', '{% url "eliminacion_masiva_aprendices" %}');
+    
+    fetch('{% url "eliminacion_masiva_aprendices" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        console.log('📥 Respuesta recibida:', response.status, response.statusText);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📄 Datos recibidos:', data);
+        if (data.success) {
+            console.log('✅ Eliminación exitosa');
+            
+            // Mostrar mensaje de éxito
+            if (mensajeProceso) {
+                mensajeProceso.innerHTML = '✅ Eliminación completada';
+                setTimeout(() => {
+                    alert('Aprendices eliminados correctamente');
+                    window.location.reload();
+                }, 1000);
+            }
+        } else {
+            console.log('❌ Error en eliminación:', data.message);
+            if (mensajeProceso) {
+                mensajeProceso.innerHTML = '❌ Error al eliminar';
+            }
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error al eliminar aprendices:', error);
+        if (mensajeProceso) {
+            mensajeProceso.innerHTML = '❌ Error de conexión';
+        }
+        alert('Error al eliminar aprendices');
+    });
+}
+
+// Función para mostrar notificación global
+function mostrarNotificacionGlobal(cantidad) {
+    // Eliminar notificación anterior si existe
+    const notificacionAnterior = document.getElementById('notificacion-global');
+    if (notificacionAnterior) {
+        notificacionAnterior.remove();
+    }
+    
+    // Crear nueva notificación
+    const notificacion = document.createElement('div');
+    notificacion.id = 'notificacion-global';
+    notificacion.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+    notificacion.style.zIndex = '9999';
+    notificacion.style.minWidth = '350px';
+    notificacion.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>
+                <strong>¡Todos seleccionados!</strong><br>
+                <small class="text-muted">Se han seleccionado ${cantidad} aprendices de todas las páginas</small>
+            </div>
+            <button type="button" class="btn-close ms-2" onclick="document.getElementById('notificacion-global').remove()"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(notificacion);
+    
+    // Auto-eliminar después de 4 segundos
+    setTimeout(() => {
+        const notif = document.getElementById('notificacion-global');
+        if (notif) {
+            notif.classList.remove('show');
+            setTimeout(() => notif.remove(), 300);
+        }
+    }, 4000);
+}
+
+// Función auxiliar para obtener CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Ocultar animación de carga
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar event listener al checkbox "Seleccionar Todos"
+    const checkboxSelectAll = document.getElementById('checkboxSelectAll');
+    if (checkboxSelectAll) {
+        checkboxSelectAll.addEventListener('change', seleccionarTodos);
+    }
+    
+    // Ocultar animación de carga contador
+    actualizarContador();
+    
+    setTimeout(() => {
+        const loadingAnimation = document.getElementById('loading-animation');
+        if (loadingAnimation) {
+            loadingAnimation.style.display = 'none';
+        }
+    }, 1500);
+});
+</script>
+
+{% endblock %}

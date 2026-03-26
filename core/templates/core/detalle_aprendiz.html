@@ -1,15 +1,26 @@
 {% extends 'core/base.html' %}
-
-{% block title %}{{ aprendiz.nombre_completo }} - Gestión SENA{% endblock %}
+{% load static %}
+{% block title %}{{ aprendiz.nombre }} - Gestión SENA{% endblock %}
 
 {% block content %}
+<!-- Animaciones CSS Locales Gratuitas -->
+<link href="{% static 'core/css/animaciones-gratuitas.css' %}" rel="stylesheet">
+
+<!-- Animación de carga -->
+<div id="loading-animation" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+    <div class="loader-spinner"></div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                <i class="fas fa-user text-primary me-2"></i>
-                {{ aprendiz.nombre_completo }}
-            </h1>
+            <div class="d-flex align-items-center">
+                <h1>
+                    <i class="fas fa-user text-primary me-2"></i>
+                    {{ aprendiz.nombre }}
+                </h1>
+                <div class="users-animation"></div>
+            </div>
             <div>
                 <a href="{% url 'editar_aprendiz' aprendiz.pk %}" class="btn btn-primary">
                     <i class="fas fa-edit me-2"></i>Editar
@@ -22,7 +33,7 @@
                     <ul class="dropdown-menu">
                         <li>
                             <a class="dropdown-item text-danger" 
-                               href="{% url 'confirmar_eliminar_aprendiz' aprendiz.pk %}">
+                               href="{% url 'eliminar_aprendiz' aprendiz.pk %}">
                                 <i class="fas fa-trash me-2"></i>Eliminar Aprendiz
                             </a>
                         </li>
@@ -52,41 +63,76 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fas fa-id-card me-2"></i>
-                    Información Personal
+                    Información del Aprendiz
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Tipo Documento:</strong> {{ aprendiz.get_tipo_documento_display }}</p>
-                        <p><strong>Número Documento:</strong> {{ aprendiz.numero_documento }}</p>
-                        <p><strong>Nombres:</strong> {{ aprendiz.nombres }}</p>
-                        <p><strong>Apellidos:</strong> {{ aprendiz.apellidos }}</p>
+                        <p><strong>Nombre Completo:</strong></p>
+                        <p class="fs-5">{{ aprendiz.nombre }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Email:</strong> 
+                        <p><strong>Documento:</strong></p>
+                        <p class="fs-5">{{ aprendiz.documento }}</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-envelope text-muted me-2"></i>Correo Electrónico:</strong></p>
+                        <p class="fs-5">
                             {% if aprendiz.email %}
                                 <a href="mailto:{{ aprendiz.email }}">{{ aprendiz.email }}</a>
                             {% else %}
                                 <span class="text-muted">No registrado</span>
                             {% endif %}
                         </p>
-                        <p><strong>Teléfono:</strong> 
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-phone text-muted me-2"></i>Teléfono:</strong></p>
+                        <p class="fs-5">
                             {% if aprendiz.telefono %}
-                                <a href="tel:{{ aprendiz.telefono }}">{{ aprendiz.telefono }}</a>
+                                {{ aprendiz.telefono }}
                             {% else %}
                                 <span class="text-muted">No registrado</span>
                             {% endif %}
                         </p>
-                        <p><strong>Estado:</strong> 
-                            <span class="badge 
-                                {% if aprendiz.estado == 'DISPONIBLE' %}bg-success
-                                {% elif aprendiz.estado == 'INHABILITADO_ACT' %}bg-danger
-                                {% elif aprendiz.estado == 'PROCESO_SELECCION' %}bg-warning
-                                {% elif aprendiz.estado == 'PROCESO_ABIERTO' %}bg-info
-                                {% else %}bg-secondary{% endif %}">
-                                {{ aprendiz.get_estado_display }}
-                            </span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Programa:</strong></p>
+                        <p>{{ aprendiz.programa|default:"No especificado" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Estado:</strong></p>
+                        <span class="badge estado-badge fs-6" data-estado="{{ aprendiz.estado }}">
+                            {{ aprendiz.estado }}
+                        </span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-calendar-alt text-muted me-2"></i>Inicio Etapa Lectiva:</strong></p>
+                        <p class="fs-5">
+                            {% if aprendiz.fecha_lectiva %}
+                                {{ aprendiz.fecha_lectiva|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">No registrada</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-calendar-check text-muted me-2"></i>Inicio Etapa Práctica:</strong></p>
+                        <p class="fs-5">
+                            {% if aprendiz.fecha_practica %}
+                                {{ aprendiz.fecha_practica|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">No registrada</span>
+                            {% endif %}
                         </p>
                     </div>
                 </div>
@@ -104,265 +150,64 @@
             </div>
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="fas fa-user-circle fa-4x 
-                        {% if aprendiz.estado == 'DISPONIBLE' %}text-success
-                        {% elif aprendiz.estado == 'INHABILITADO_ACT' %}text-danger
-                        {% elif aprendiz.estado == 'PROCESO_SELECCION' %}text-warning
-                        {% elif aprendiz.estado == 'PROCESO_ABIERTO' %}text-info
-                        {% else %}text-secondary{% endif %}"></i>
+                    <i class="fas fa-user-circle fa-4x estado-icono" data-estado="{{ aprendiz.estado }}"></i>
                 </div>
-                <h4>{{ aprendiz.get_estado_display }}</h4>
-                <div class="btn-group mt-3" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" 
-                            data-bs-toggle="dropdown">
-                        <i class="fas fa-exchange-alt me-1"></i>Cambiar Estado
-                    </button>
-                    <ul class="dropdown-menu">
-                        {% for estado_code, estado_label in aprendiz.ESTADOS %}
-                            <li>
-                                <a class="dropdown-item cambiar-estado" 
-                                   href="#" 
-                                   data-pk="{{ aprendiz.pk }}"
-                                   data-estado="{{ estado_code }}">
-                                    {% if aprendiz.estado == estado_code %}
-                                        <i class="fas fa-check me-2"></i>
-                                    {% endif %}
-                                    {{ estado_label }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                <h4>{{ aprendiz.estado }}</h4>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Información Académica -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-graduation-cap me-2"></i>
-                    Información Académica
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Especialización:</strong> {{ aprendiz.especializacion }}</p>
-                        <p><strong>Número de Ficha:</strong> 
-                            {% if aprendiz.ficha %}
-                                {{ aprendiz.ficha }}
-                            {% else %}
-                                <span class="text-muted">No asignada</span>
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Etapa Electiva:</strong> 
-                            {% if aprendiz.etapa_electiva %}
-                                {{ aprendiz.etapa_electiva|date:"d/m/Y" }}
-                            {% else %}
-                                <span class="text-muted">No definida</span>
-                            {% endif %}
-                        </p>
-                        <p><strong>Etapa Práctica:</strong> 
-                            {% if aprendiz.etapa_practica %}
-                                {{ aprendiz.etapa_practica|date:"d/m/Y" }}
-                                {% if aprendiz.dias_restantes_practica is not None %}
-                                    {% if aprendiz.dias_restantes_practica <= 30 %}
-                                        <span class="badge bg-warning ms-2">{{ aprendiz.dias_restantes_practica }} días</span>
-                                    {% else %}
-                                        <small class="text-muted">({{ aprendiz.dias_restantes_practica }} días)</small>
-                                    {% endif %}
-                                {% endif %}
-                            {% else %}
-                                <span class="text-muted">No definida</span>
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-                
-                {% if aprendiz.observaciones %}
-                    <div class="mt-3">
-                        <strong>Observaciones:</strong>
-                        <p class="mt-1">{{ aprendiz.observaciones|linebreaks }}</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-building me-2"></i>
-                    Empresa Vinculada
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if aprendiz.empresa_vinculada %}
-                    <h6>{{ aprendiz.empresa_vinculada.razon_social }}</h6>
-                    <p class="text-muted">{{ aprendiz.empresa_vinculada.nit }}</p>
-                    
-                    {% if aprendiz.empresa_vinculada.direccion %}
-                        <p><strong>Dirección:</strong> {{ aprendiz.empresa_vinculada.direccion }}</p>
-                    {% endif %}
-                    
-                    {% if aprendiz.empresa_vinculada.telefono %}
-                        <p><strong>Teléfono:</strong> {{ aprendiz.empresa_vinculada.telefono }}</p>
-                    {% endif %}
-                    
-                    {% if aprendiz.empresa_vinculada.email %}
-                        <p><strong>Email:</strong> {{ aprendiz.empresa_vinculada.email }}</p>
-                    {% endif %}
-                    
-                    {% if aprendiz.empresa_vinculada.sector_economico %}
-                        <p><strong>Sector:</strong> {{ aprendiz.empresa_vinculada.sector_economico }}</p>
-                    {% endif %}
-                    
-                    <div class="mt-3">
-                        <a href="{% url 'detalle_empresa' aprendiz.empresa_vinculada.pk %}" 
-                           class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye me-1"></i>Ver Empresa
-                        </a>
-                    </div>
-                {% else %}
-                    <p class="text-muted text-center">
-                        <i class="fas fa-building fa-2x mb-2"></i><br>
-                        Sin empresa vinculada
-                    </p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.estado-badge[data-estado="Disponible"] { background-color: #28a745; color: white; }
+.estado-badge[data-estado="Aprendiz Aplica"] { background-color: #17a2b8; color: white; }
+.estado-badge[data-estado="Empresa Solicita"] { background-color: #ffc107; color: black; }
+.estado-badge[data-estado="En Proceso de Selección"] { background-color: #007bff; color: white; }
+.estado-badge[data-estado="Contratado"] { background-color: #28a745; color: white; }
+.estado-badge[data-estado="Final Contrato"] { background-color: #6c757d; color: white; }
+.estado-badge[data-estado="Cancelado"] { background-color: #dc3545; color: white; }
+.estado-badge[data-estado="Alumno Retirado"] { background-color: #343a40; color: white; }
+.estado-badge[data-estado="Aplazado"] { background-color: #ffc107; color: black; }
+.estado-badge[data-estado="Pendiente Por Certificar"] { background-color: #17a2b8; color: white; }
+.estado-badge[data-estado="Bajo Rendimiento Académico"] { background-color: #e83e8c; color: white; }
+.estado-badge[data-estado="Aprendiz no interesado en contrato"] { background-color: #fd7e14; color: white; }
+.estado-badge[data-estado="Inhabilitado Por Actualización"] { background-color: #dc3545; color: white; }
+.estado-badge[data-estado="Contrato No Registrado"] { background-color: #6c757d; color: white; }
+.estado-badge[data-estado="Fallecido"] { background-color: #343a40; color: white; }
 
-<!-- Metadatos -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-clock me-2"></i>
-                    Información de Registro
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <p><strong>Fecha de Carga:</strong> {{ aprendiz.fecha_carga|date:"d/m/Y H:i" }}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <p><strong>Última Actualización:</strong> {{ aprendiz.fecha_actualizacion|date:"d/m/Y H:i" }}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <p><strong>Archivo de Origen:</strong> 
-                            {% if aprendiz.archivo_origen %}
-                                {{ aprendiz.archivo_origen }}
-                            {% else %}
-                                <span class="text-muted">No especificado</span>
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
+.estado-icono[data-estado="Disponible"] { color: #28a745; }
+.estado-icono[data-estado="Aprendiz Aplica"] { color: #17a2b8; }
+.estado-icono[data-estado="Empresa Solicita"] { color: #ffc107; }
+.estado-icono[data-estado="En Proceso de Selección"] { color: #007bff; }
+.estado-icono[data-estado="Contratado"] { color: #28a745; }
+.estado-icono[data-estado="Final Contrato"] { color: #6c757d; }
+.estado-icono[data-estado="Cancelado"] { color: #dc3545; }
+.estado-icono[data-estado="Alumno Retirado"] { color: #343a40; }
+.estado-icono[data-estado="Aplazado"] { color: #ffc107; }
+.estado-icono[data-estado="Pendiente Por Certificar"] { color: #17a2b8; }
+.estado-icono[data-estado="Bajo Rendimiento Académico"] { color: #e83e8c; }
+.estado-icono[data-estado="Aprendiz no interesado en contrato"] { color: #fd7e14; }
+.estado-icono[data-estado="Inhabilitado Por Actualización"] { color: #dc3545; }
+.estado-icono[data-estado="Contrato No Registrado"] { color: #6c757d; }
+.estado-icono[data-estado="Fallecido"] { color: #343a40; }
+</style>
 
-{% block extra_js %}
+<!-- 🎭 Animaciones CSS gratuitas - Sin dependencias externas -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Cambiar estado vía AJAX
-    const cambiarEstadoLinks = document.querySelectorAll('.cambiar-estado');
+    console.log('🚀 Detalle de aprendiz con animaciones CSS gratuitas cargado');
     
-    cambiarEstadoLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const pk = this.dataset.pk;
-            const estado = this.dataset.estado;
-            const url = `/aprendices/${pk}/cambiar-estado/`;
-            
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: `estado=${estado}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Ocurrió un error al cambiar el estado');
-            });
-        });
-    });
-    
-    // Eliminar aprendiz vía AJAX
-    const eliminarAjaxLinks = document.querySelectorAll('.eliminar-ajax');
-    
-    eliminarAjaxLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const pk = this.dataset.pk;
-            const nombre = this.dataset.nombre;
-            const url = `/aprendices/${pk}/eliminar-ajax/`;
-            
-            if (confirm(`¿Estás seguro de que deseas eliminar a ${nombre}? Esta acción es irreversible.`)) {
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        window.location.href = '/aprendices/';
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Ocurrió un error al eliminar el aprendiz');
-                });
-            }
-        });
-    });
-});
-
-// Función para obtener CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
+    // Ocultar animación de carga después de 1 segundo
+    setTimeout(() => {
+        const loadingAnimation = document.getElementById('loading-animation');
+        if (loadingAnimation) {
+            loadingAnimation.style.display = 'none';
         }
-    }
-    return cookieValue;
-}
+    }, 1000);
+    
+    // Las animaciones CSS se cargan automáticamente
+    console.log('✅ Animaciones CSS activas');
+});
 </script>
+
 {% endblock %}

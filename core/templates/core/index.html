@@ -1,0 +1,263 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+
+<!-- HERO SECTION -->
+<div class="text-center mb-5">
+    <h1 class="display-4 fw-bold text-primary mb-4">
+        <i class="fas fa-graduation-cap me-3"></i>
+        Gestión SENA
+    </h1>
+    <p class="lead text-muted mb-4">
+        Plataforma inteligente para administración de aprendices y empresas
+    </p>
+    <hr class="w-25 mx-auto">
+</div>
+
+<!-- DASHBOARD RAPIDO -->
+<div class="row text-center mb-5">
+    <div class="col-md-4">
+        <a href="{% url 'dashboard' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-0 dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                        Dashboard
+                    </h5>
+                    <p class="text-muted">Estadísticas y filtros</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-4">
+        <a href="{% url 'lista_aprendices' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-0 dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users text-success me-2"></i>
+                        Aprendices
+                    </h5>
+                    <p class="text-muted">Gestión de aprendices</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-4">
+        <a href="{% url 'reportes' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-0 dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-bar text-info me-2"></i>
+                        Reportes
+                    </h5>
+                    <p class="text-muted">Informes y análisis</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- ACCIONES PRINCIPALES -->
+<div class="row text-center mb-5">
+    <div class="col-md-12">
+        <h3 class="mb-4">
+            <i class="fas fa-rocket text-warning me-2"></i>
+            Acciones Principales
+        </h3>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'estadisticas_etapas' %}" class="text-decoration-none">
+            <div class="card action-card shadow-sm border-0">
+                <div class="card-body">
+                    <h3 class="text-primary">
+                        <i class="fas fa-chart-pie"></i>
+                    </h3>
+                    <h5>Estadísticas</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'lista_aprendices' %}" class="text-decoration-none">
+            <div class="card action-card shadow-sm border-0">
+                <div class="card-body">
+                    <h3 class="text-success">
+                        <i class="fas fa-user-plus"></i>
+                    </h3>
+                    <h5>Nuevo Aprendiz</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'carga_excel_nueva' %}" class="text-decoration-none">
+            <div class="card action-card shadow-sm border-0">
+                <div class="card-body">
+                    <h3 class="text-info">
+                        <i class="fas fa-file-excel"></i>
+                    </h3>
+                    <h5>Cargar Excel</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'dashboard' %}" class="text-decoration-none">
+            <div class="card action-card shadow-sm border-0">
+                <div class="card-body">
+                    <h3 class="text-warning">
+                        <i class="fas fa-cog"></i>
+                    </h3>
+                    <h5>Configuración</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- CARACTERÍSTICAS -->
+<div class="row mt-5">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-4">
+            <i class="fas fa-shield-alt text-success me-2"></i>
+            Características Principales
+        </h2>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+                <i class="fas fa-check text-success me-2"></i>
+                <b>Gestión Completa</b> - Administración integral de aprendices
+            </li>
+            <li class="list-group-item">
+                <i class="fas fa-check text-success me-2"></i>
+                <b>Estadísticas en Tiempo Real</b> - Dashboard con datos actualizados
+            </li>
+            <li class="list-group-item">
+                <i class="fas fa-check text-success me-2"></i>
+                <b>Filtros Avanzados</b> - Búsqueda y filtrado instantáneo
+            </li>
+            <li class="list-group-item">
+                <i class="fas fa-check text-success me-2"></i>
+                <b>Reportes Inteligentes</b> - Generación de informes detallados
+            </li>
+            <li class="list-group-item">
+                <i class="fas fa-check text-success me-2"></i>
+                <b>Importación Excel</b> - Carga masiva de datos
+            </li>
+        </ul>
+    </div>
+    
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-4">
+            <i class="fas fa-code text-primary me-2"></i>
+            Tecnología
+        </h2>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+                <i class="fab fa-python text-primary me-2"></i>
+                <b>Django</b> - Backend robusto y escalable
+            </li>
+            <li class="list-group-item">
+                <i class="fab fa-bootstrap text-info me-2"></i>
+                <b>Bootstrap 5</b> - Interfaz moderna responsive
+            </li>
+            <li class="list-group-item">
+                <i class="fas fa-database text-warning me-2"></i>
+                <b>SQLite</b> - Base de datos optimizada
+            </li>
+            <li class="list-group-item">
+                <i class="fab fa-js text-warning me-2"></i>
+                <b>JavaScript</b> - Interactividad avanzada
+            </li>
+            <li class="list-group-item">
+                <i class="fas fa-chart-line text-danger me-2"></i>
+                <b>Chart.js</b> - Visualización de datos
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- BOTÓN PRINCIPAL -->
+<div class="text-center mt-5">
+    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Ir al Dashboard
+        <i class="fas fa-arrow-right ms-2"></i>
+    </a>
+</div>
+
+</div>
+
+<!-- ESTILOS -->
+<style>
+.dashboard-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid #007bff;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    border-left-color: #0056b3;
+}
+
+.action-card {
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border-radius: 15px;
+}
+
+.action-card:hover {
+    transform: scale(1.05);
+    background: #f8f9fa;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.action-card h3 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.list-group-item {
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    border-left-color: #007bff;
+    transform: translateX(5px);
+}
+
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+}
+
+.display-4 {
+    animation: fadeInDown 1s ease;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+{% endblock %}

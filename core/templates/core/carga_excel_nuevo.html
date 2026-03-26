@@ -877,7 +877,7 @@ class SistemaCargaExcel {
 
     async validarArchivo() {
         if (this.files.length === 0) {
-            this.showNotification('Por favor, selecciona archivos primero', 'error');
+            console.error('Por favor, selecciona archivos primero');
             return;
         }
 
@@ -932,9 +932,9 @@ class SistemaCargaExcel {
                 if (data.success) {
                     totalRows += data.total_rows || 0;
                     validFiles++;
-                    this.showNotification(`${file.name}: ${data.total_rows} filas válidas`, 'success');
+                    console.log(`${file.name}: ${data.total_rows} filas válidas`);
                 } else {
-                    this.showNotification(`Error en ${file.name}: ${data.message}`, 'error');
+                    console.error(`Error en ${file.name}: ${data.message}`);
                 }
             }
 
@@ -952,7 +952,7 @@ class SistemaCargaExcel {
         } catch (error) {
             console.error('❌ Error en validación:', error);
             console.error('❌ Error completo:', error.stack);
-            this.showNotification(`Error al validar archivos: ${error.message}`, 'error');
+            console.error(`Error al validar archivos: ${error.message}`);
             this.updateStatus('error', 'Error de validación');
         } finally {
             setTimeout(() => {
@@ -964,7 +964,7 @@ class SistemaCargaExcel {
 
     async procesarArchivo() {
         if (!this.validationResults) {
-            this.showNotification('Por favor, valida los archivos primero', 'error');
+            console.error('Por favor, valida los archivos primero');
             return;
         }
 
@@ -1014,16 +1014,16 @@ class SistemaCargaExcel {
                     // Actualizar estadísticas finales
                     document.getElementById('recordsProcessed').textContent = nuevos + actualizados;
                     
-                    this.showNotification(`${file.name}: ${nuevos} nuevos, ${actualizados} actualizados`, 'success');
+                    console.log(`${file.name}: ${nuevos} nuevos, ${actualizados} actualizados`);
+                    
                     totalExtraidosGlobal += extraidos;
                     
-                    this.showNotification(
-                        `${file.name}: ${extraidos} extraídos, ${nuevos} nuevos, ${actualizados} actualizados`, 
-                        'success'
+                    console.log(
+                        `${file.name}: ${extraidos} extraídos, ${nuevos} nuevos, ${actualizados} actualizados`
                     );
                 } else {
                     totalErrores++;
-                    this.showNotification(`Error en ${file.name}: ${data.message}`, 'error');
+                    console.error(`Error en ${file.name}: ${data.message}`);
                 }
 
                 // Update progress within current file
@@ -1038,25 +1038,19 @@ class SistemaCargaExcel {
 
             if (totalErrores === 0) {
                 this.updateStatus('success', `${this.files.length} archivos procesados correctamente`);
-                this.showNotification(
-                    `¡Éxito! ${totalExtraidosGlobal} aprendices extraídos, ${totalProcesados} procesados (${tasaExito}% éxito)`, 
-                    'success'
+                console.log(
+                    `¡Éxito! ${totalExtraidosGlobal} aprendices extraídos, ${totalProcesados} procesados (${tasaExito}% éxito)`
                 );
-                
-                setTimeout(() => {
-                    window.location.href = '/resultado-carga/';
-                }, 3000);
             } else {
                 this.updateStatus('warning', `${totalErrores} archivos con errores`);
-                this.showNotification(
-                    `${totalErrores} archivos con errores. ${totalExtraidosGlobal} extraídos, ${totalProcesados} procesados`, 
-                    'warning'
+                console.log(
+                    `${totalErrores} archivos con errores. ${totalExtraidosGlobal} extraídos, ${totalProcesados} procesados`
                 );
             }
 
         } catch (error) {
             console.error('Error en procesamiento:', error);
-            this.showNotification('Error al procesar archivos', 'error');
+            console.error('Error al procesar archivos');
             this.updateStatus('error', 'Error de procesamiento');
         } finally {
             setTimeout(() => {

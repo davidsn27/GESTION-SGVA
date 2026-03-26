@@ -1,7 +1,283 @@
 import pandas as pd
 from datetime import datetime
 from django.db import transaction
-from .models import Aprendiz, Empresa, CargaExcel
+from .models import Aprendiz, Empresa
+
+def procesar_excel_simple(archivo, nombre_archivo):
+    """
+    Procesa archivo Excel con el modelo completo de Aprendiz
+    Extrae todos los campos posibles del Excel del SENA
+    """
+    resultados = {
+        'total': 0,
+        'nuevos': 0,
+        'actualizados': 0,
+        'errores': []
+    }
+    
+    try:
+        print(f"📊 Leyendo archivo Excel: {nombre_archivo}")
+        df = pd.read_excel(archivo)
+        print(f"📋 Filas leídas: {len(df)}")
+        
+        # Limpieza de datos
+        df = df.fillna('')
+        df = df.replace([float('nan'), float('inf'), float('-inf')], '')
+        
+        # Normalizar nombres de columnas
+        columnas_originales = list(df.columns)
+        df.columns = [str(col).strip().lower().replace(' ', '_') for col in df.columns]
+        print(f"✅ Columnas disponibles: {columnas_originales}")
+        print(f"✅ Columnas normalizadas: {list(df.columns)}")
+        
+        # Función helper para obtener valor de columna
+        def obtener_valor(row, posibles_nombres, default=''):
+            for nombre in posibles_nombres:
+                if nombre in row and str(row[nombre]).strip():
+                    return str(row[nombre]).strip()
+            return default
+        
+        # Función para parsear fechas
+        def parsear_fecha(fecha_str):
+            if not fecha_str or fecha_str == '':
+                return None
+            try:
+                # Intentar diferentes formatos
+                for formato in ['%d/%m/%Y', '%Y-%m-%d', '%d-%m-%Y', '%m/%d/%Y']:
+                    try:
+                        return datetime.strptime(str(fecha_str).strip(), formato).date()
+                    except:
+                        continue
+            except:
+                pass
+            return None
+        
+        with transaction.atomic():
+            for index, row in df.iterrows():
+                try:
+                    resultados['total'] += 1
+                    numero_fila = index + 2
+                    
+                    # === INFORMACIÓN BÁSICA ===
+                    # Nombre (combinar Apellidos + Nombres)
+                    apellidos = obtener_valor(row, ['apellidos', 'apellido', 'lastname', 'primer_apellido', 'segundo_apellido'])
+                    nombres = obtener_valor(row, ['nombres', 'nombre', 'name', 'primer_nombre', 'segundo_nombre'])
+                    
+                    if apellidos and nombres:
+                        nombre_completo = f"{apellidos} {nombres}"
+                    elif apellidos:
+                        nombre_completo = apellidos
+                    elif nombres:
+                        nombre_completo = nombres
+                    else:
+                        nombre_completo = obtener_valor(row, ['nombre_completo', 'aprendiz', 'estudiante'])
+                    
+                    # Documento y tipo
+                    tipo_doc = obtener_valor(row, ['tipo_doc', 'tipo_documento', 'tipo_de_documento', 'td'])
+                    documento = obtener_valor(row, [
+                        'numero', 'número', 'documento', 'numero_documento', 'numero_doc', 
+                        'cedula', 'cc', 'id', 'nit', 'doc', 'document'
+                    ])
+                    
+                    # === INFORMACIÓN DE CONTACTO ===
+                    email = obtener_valor(row, ['email', 'correo', 'correo_electronico', 'correo_electrónico', 'e_mail', 'mail'])
+                    telefono = obtener_valor(row, ['telefono', 'teléfono', 'celular', 'cel', 'telefono_contacto', 'tel'])
+                    direccion = obtener_valor(row, ['direccion', 'dirección', 'direccion_residencia', 'barrio'])
+                    
+                    # === INFORMACIÓN ACADÉMICA ===
+                    programa = obtener_valor(row, ['programa', 'programa_formacion', 'formacion', 'especialidad', 'curso', 'area'])
+                    ficha = obtener_valor(row, ['ficha', 'numero_ficha', 'ficha_numero', 'grupo', 'num_ficha'])
+                    
+                    # === FECHAS ===
+                    fecha_nacimiento = parsear_fecha(obtener_valor(row, ['fecha_nacimiento', 'fecha_nac', 'nacimiento']))
+                    fecha_ingreso = parsear_fecha(obtener_valor(row, ['fecha_ingreso', 'fecha_inicio']))
+                    fecha_lectiva = parsear_fecha(obtener_valor(row, ['fecha_lectiva', 'fecha lectiva', 'fecha_inicio_lectiva', 'inicio_lectiva', 'fecha_leci']))
+                    fecha_practica = parsear_fecha(obtener_valor(row, ['fecha_productiva', 'fecha productiva', 'fecha_inicio_practica', 'inicio_productiva', 'fecha_pro']))
+                    
+                    # === UBICACIÓN ===
+                    regional = obtener_valor(row, ['regional', 'codigo_regional', 'reg'])
+                    centro = obtener_valor(row, ['centro', 'codigo_centro', 'sede', 'centro_de_formacion'])
+                    municipio = obtener_valor(row, ['municipio', 'ciudad', 'municipio_residencia'])
+                    
+                    # === FILTRO POR CENTRO ===
+                    # Solo procesar aprendices del Centro de Tecnologías del Transporte
+                    if centro and 'TECNOLOGIAS DEL TRANSPORTE' not in centro.upper():
+                        print(f"⏭️ Fila {numero_fila}: Saltando - No es del Centro de Tecnologías del Transporte ({centro})")
+                        continue
+                    
+                    # === ESTADO ===
+                    estado_raw = obtener_valor(row, ['estado', 'estado_aprendiz', 'situacion', 'status', 'condicion', 'estado_aprendices'])
+                    if not estado_raw:
+                        estado_raw = 'Disponible'
+                    estado = normalizar_estado_simple(estado_raw)
+                    
+                    # === EMPRESA Y CONTRATO ===
+                    nit_empresa = obtener_valor(row, ['nit_empresa', 'nit', 'nit_de_la_empresa', 'empresa_nit'])
+                    razon_social_empresa = obtener_valor(row, ['razon_social', 'empresa', 'nombre_empresa', 'razon_social_empresa'])
+                    fecha_inicio_contrato = parsear_fecha(obtener_valor(row, ['fecha_inicio_contrato', 'inicio_contrato']))
+                    fecha_fin_contrato = parsear_fecha(obtener_valor(row, ['fecha_fin_contrato', 'fin_contrato', 'fecha_terminacion']))
+                    
+                    # Cantidad de contratos
+                    cant_contratos_str = obtener_valor(row, ['cantidad_de_contratos', 'numero_contratos', 'contratos'])
+                    try:
+                        cantidad_contratos = int(cant_contratos_str) if cant_contratos_str else 0
+                    except:
+                        cantidad_contratos = 0
+                    
+                    # === OBSERVACIONES ===
+                    observaciones = obtener_valor(row, ['observaciones', 'obs', 'notas', 'comentarios'])
+                    
+                    print(f"🔍 Fila {numero_fila}: {nombre_completo} - {documento}")
+                    
+                    # Validar campos obligatorios
+                    if not nombre_completo or not documento:
+                        resultados['errores'].append(f"Fila {numero_fila}: Nombre y documento son obligatorios")
+                        continue
+                    
+                    # Buscar si el aprendiz ya existe
+                    aprendiz_existente = Aprendiz.objects.filter(documento=documento).first()
+                    
+                    if aprendiz_existente:
+                        # Actualizar todos los campos
+                        aprendiz_existente.nombre = nombre_completo
+                        aprendiz_existente.tipo_documento = tipo_doc or aprendiz_existente.tipo_documento
+                        aprendiz_existente.email = email or aprendiz_existente.email
+                        aprendiz_existente.telefono = telefono or aprendiz_existente.telefono
+                        aprendiz_existente.direccion = direccion or aprendiz_existente.direccion
+                        aprendiz_existente.programa = programa or aprendiz_existente.programa
+                        aprendiz_existente.ficha = ficha or aprendiz_existente.ficha
+                        aprendiz_existente.fecha_nacimiento = fecha_nacimiento or aprendiz_existente.fecha_nacimiento
+                        aprendiz_existente.fecha_ingreso = fecha_ingreso or aprendiz_existente.fecha_ingreso
+                        aprendiz_existente.fecha_lectiva = fecha_lectiva or aprendiz_existente.fecha_lectiva
+                        aprendiz_existente.fecha_practica = fecha_practica or aprendiz_existente.fecha_practica
+                        aprendiz_existente.regional = regional or aprendiz_existente.regional
+                        aprendiz_existente.centro = centro or aprendiz_existente.centro
+                        aprendiz_existente.municipio = municipio or aprendiz_existente.municipio
+                        aprendiz_existente.estado = estado
+                        aprendiz_existente.nit_empresa = nit_empresa or aprendiz_existente.nit_empresa
+                        aprendiz_existente.razon_social_empresa = razon_social_empresa or aprendiz_existente.razon_social_empresa
+                        aprendiz_existente.fecha_inicio_contrato = fecha_inicio_contrato or aprendiz_existente.fecha_inicio_contrato
+                        aprendiz_existente.fecha_fin_contrato = fecha_fin_contrato or aprendiz_existente.fecha_fin_contrato
+                        aprendiz_existente.cantidad_de_contratos = cantidad_contratos or aprendiz_existente.cantidad_de_contratos
+                        aprendiz_existente.observaciones = observaciones or aprendiz_existente.observaciones
+                        aprendiz_existente.archivo_origen = nombre_archivo
+                        aprendiz_existente.save()
+                        resultados['actualizados'] += 1
+                        print(f"🔄 Fila {numero_fila}: Aprendiz actualizado - {nombre_completo}")
+                    else:
+                        # Crear nuevo aprendiz con todos los campos
+                        Aprendiz.objects.create(
+                            nombre=nombre_completo,
+                            documento=documento,
+                            tipo_documento=tipo_doc,
+                            email=email,
+                            telefono=telefono,
+                            direccion=direccion,
+                            programa=programa,
+                            ficha=ficha,
+                            fecha_nacimiento=fecha_nacimiento,
+                            fecha_ingreso=fecha_ingreso,
+                            fecha_lectiva=fecha_lectiva,
+                            fecha_practica=fecha_practica,
+                            regional=regional,
+                            centro=centro,
+                            municipio=municipio,
+                            estado=estado,
+                            nit_empresa=nit_empresa,
+                            razon_social_empresa=razon_social_empresa,
+                            fecha_inicio_contrato=fecha_inicio_contrato,
+                            fecha_fin_contrato=fecha_fin_contrato,
+                            cantidad_de_contratos=cantidad_contratos,
+                            observaciones=observaciones,
+                            archivo_origen=nombre_archivo
+                        )
+                        resultados['nuevos'] += 1
+                        print(f"✅ Fila {numero_fila}: Aprendiz creado - {nombre_completo}")
+                        
+                except Exception as e:
+                    error_msg = f"Fila {numero_fila}: {str(e)}"
+                    resultados['errores'].append(error_msg)
+                    print(f"❌ {error_msg}")
+    
+    except Exception as e:
+        error_msg = f"Error general procesando archivo: {str(e)}"
+        resultados['errores'].append(error_msg)
+        print(f"❌ {error_msg}")
+    
+    # Resumen final
+    print(f"\n📊 RESUMEN: {resultados['nuevos']} nuevos, {resultados['actualizados']} actualizados, {len(resultados['errores'])} errores")
+    
+    return resultados
+
+def normalizar_estado_simple(estado_str):
+    """
+    Normaliza el estado al formato del modelo simplificado
+    """
+    if not estado_str or estado_str.strip() == '':
+        return 'Disponible'
+    
+    estado_str = estado_str.strip().lower()
+    
+    # Mapeo de estados simples
+    mapeo_estados = {
+        'disponible': 'Disponible',
+        'aprendiz aplica': 'Aprendiz Aplica',
+        'empresa solicita': 'Empresa Solicita',
+        'en proceso de selección': 'En Proceso de Selección',
+        'proceso de selección abierto': 'Proceso de Selección Abierto',
+        'aprendiz con procesos de seleccion abiertos': 'Proceso de Selección Abierto',
+        'aprendiz con procesos de selección abiertos': 'Proceso de Selección Abierto',
+        'contratado': 'Contratado',
+        'final contrato': 'Final Contrato',
+        'cancelado': 'Cancelado',
+        'alumno retirado': 'Alumno Retirado',
+        'aplazado': 'Aplazado',
+        'pendiente por certificar': 'Pendiente Por Certificar',
+        'bajo rendimiento académico': 'Bajo Rendimiento Académico',
+        'aprendiz no interesado en contrato': 'Aprendiz no interesado en contrato',
+        'inhabilitado por actualización': 'Inhabilitado Por Actualización',
+        'contrato no registrado': 'Contrato No Registrado',
+        'fallecido': 'Fallecido',
+    }
+    
+    # Buscar coincidencia exacta
+    if estado_str in mapeo_estados:
+        return mapeo_estados[estado_str]
+    
+    # Búsqueda por palabras clave
+    if 'disponible' in estado_str or 'activo' in estado_str:
+        return 'Disponible'
+    elif 'aplica' in estado_str or 'postul' in estado_str:
+        return 'Aprendiz Aplica'
+    elif 'empresa' in estado_str or 'solicita' in estado_str:
+        return 'Empresa Solicita'
+    elif 'proceso' in estado_str or 'selección' in estado_str or 'seleccion' in estado_str:
+        return 'En Proceso de Selección'
+    elif 'contrat' in estado_str or 'vincul' in estado_str:
+        return 'Contratado'
+    elif 'final' in estado_str or 'termin' in estado_str:
+        return 'Final Contrato'
+    elif 'cancel' in estado_str or 'anul' in estado_str:
+        return 'Cancelado'
+    elif 'retir' in estado_str or 'abandon' in estado_str:
+        return 'Alumno Retirado'
+    elif 'aplaz' in estado_str or 'pospon' in estado_str:
+        return 'Aplazado'
+    elif 'certific' in estado_str or 'cert' in estado_str:
+        return 'Pendiente Por Certificar'
+    elif 'rendimiento' in estado_str or 'bajo' in estado_str:
+        return 'Bajo Rendimiento Académico'
+    elif 'interesado' in estado_str or 'no quiere' in estado_str:
+        return 'Aprendiz no interesado en contrato'
+    elif 'inhabilit' in estado_str or 'suspend' in estado_str:
+        return 'Inhabilitado Por Actualización'
+    elif 'no registr' in estado_str or 'sin contrato' in estado_str:
+        return 'Contrato No Registrado'
+    elif 'fallec' in estado_str or 'muerto' in estado_str:
+        return 'Fallecido'
+    
+    # Valor por defecto
+    return 'Disponible'
 
 # Mapeo de estados para clasificación automática
 MAPEO_ESTADOS = {
@@ -473,15 +749,6 @@ def procesar_excel_aprendices(archivo, nombre_archivo):
                         
                 except Exception as e:
                     resultados['errores'].append(f"Fila {numero_fila}: {str(e)}")
-            
-            # Registrar carga
-            CargaExcel.objects.create(
-                archivo=nombre_archivo,
-                total_registros=resultados['total'],
-                registros_nuevos=resultados['nuevos'],
-                registros_actualizados=resultados['actualizados'],
-                errores='\n'.join(resultados['errores']) if resultados['errores'] else None
-            )
             
     except Exception as e:
         resultados['errores'].append(f"Error general: {str(e)}")

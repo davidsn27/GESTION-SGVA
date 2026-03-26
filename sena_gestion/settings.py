@@ -18,7 +18,10 @@ SECRET_KEY = 'django-insecure-tu-clave-secreta-aqui-cambia-en-produccion'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS',
+    'localhost,127.0.0.1,sena--gestion-sgva--wzhvyyl6cgrx.code.run'
+).split(',')
 
 
 # Application definition
@@ -154,3 +157,6 @@ if not DEBUG:
     #         'PORT': os.environ.get('DB_PORT'),
     #     }
     # }
+    
+# Aumentar límite de campos POST para eliminación masiva
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000

@@ -1,0 +1,464 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">
+        <i class="fas fa-file-excel text-success me-2"></i>
+        Carga Masiva de Aprendices
+    </h1>
+    
+    <div>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+        </a>
+    </div>
+</div>
+
+<!-- Tarjeta principal de carga -->
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    Subir Archivo Excel
+                </h4>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data" id="formCargaExcel">
+                    {% csrf_token %}
+                    
+                    <!-- Área de arrastrar y soltar -->
+                    <div class="upload-area border-2 border-dashed rounded-3 p-5 text-center mb-4" id="uploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt fa-4x text-success mb-3"></i>
+                            <h4 class="text-muted">Arrastra y suelta tus archivos Excel aquí</h4>
+                            <p class="text-muted mb-3">o</p>
+                            <div class="file-input-wrapper">
+                                <input type="file" name="archivos_excel" id="archivosExcel" class="form-control d-none" accept=".xlsx,.xls" multiple>
+                                <button type="button" class="btn btn-success" onclick="document.getElementById('archivosExcel').click()">
+                                    <i class="fas fa-folder-open me-2"></i>
+                                    Seleccionar Archivos
+                                </button>
+                            </div>
+                            <p class="text-muted small mt-3 mb-0">
+                                Formatos aceptados: .xlsx, .xls (máximo 5 archivos)
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de archivos seleccionados -->
+                    <div class="mb-4" id="archivosSeleccionados">
+                        <h6 class="mb-3">
+                            <i class="fas fa-list text-primary me-2"></i>
+                            Archivos Seleccionados:
+                            <span class="badge bg-primary ms-2" id="contadorArchivos">0</span>
+                        </h6>
+                        <div class="list-group" id="listaArchivos">
+                            <!-- Los archivos se agregarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Información de archivos seleccionados -->
+                    <div class="alert alert-info d-none" id="fileInfo">
+                        <h6><i class="fas fa-info-circle me-2"></i>Información de Archivos:</h6>
+                        <div id="fileDetails"></div>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-success" id="btnCargar" disabled>
+                            <i class="fas fa-upload me-2"></i>Cargar Aprendices
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sección de información -->
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle text-primary me-2"></i>
+                    Información Importante
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-file-alt text-success me-2"></i>Formato del Archivo:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Columna A:</strong> Nombre del aprendiz</li>
+                            <li><strong>Columna B:</strong> Documento</li>
+                            <li><strong>Columna C:</strong> Programa</li>
+                            <li><strong>Columna D:</strong> Estado</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-list-check text-primary me-2"></i>Estados Válidos:</h6>
+                        <ul class="list-unstyled">
+                            <li>• Disponible</li>
+                            <li>• Aprendiz Aplica</li>
+                            <li>• Empresa Solicita</li>
+                            <li>• En Proceso de Selección</li>
+                            <li>• Contratado</li>
+                            <li>• Y más...</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Nota:</strong> El archivo no debe tener más de 10,000 filas para un procesamiento óptimo.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de progreso -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Procesando Archivo
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+                <p class="text-center mb-0">Por favor, espera mientras procesamos tu archivo...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<style>
+.upload-area {
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    background: #e9ecef;
+    border-color: #28a745 !important;
+}
+
+.upload-area.dragover {
+    background: #d1ecf1;
+    border-color: #0dcaf0 !important;
+}
+
+.file-input-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.upload-content {
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover .upload-content {
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.bg-gradient {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.alert {
+    border-left: 4px solid;
+}
+
+.alert-info {
+    border-left-color: #0dcaf0;
+}
+
+.alert-warning {
+    border-left-color: #ffc107;
+}
+</style>
+
+<script>
+// Variables globales
+let archivosSeleccionados = [];
+const MAX_ARCHIVOS = 5;
+
+// Funcionalidad de drag and drop
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('archivosExcel');
+const fileInfo = document.getElementById('fileInfo');
+const fileDetails = document.getElementById('fileDetails');
+const btnCargar = document.getElementById('btnCargar');
+const form = document.getElementById('formCargaExcel');
+const listaArchivos = document.getElementById('listaArchivos');
+const contadorArchivos = document.getElementById('contadorArchivos');
+const archivosSeleccionadosDiv = document.getElementById('archivosSeleccionados');
+
+// Eventos de drag and drop
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFilesSelect(files);
+    }
+});
+
+// Evento de selección de archivos
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFilesSelect(e.target.files);
+        // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
+        e.target.value = '';
+    }
+});
+
+// Manejar selección de múltiples archivos
+function handleFilesSelect(files) {
+    const nuevosArchivos = Array.from(files);
+    
+    // Validar cantidad máxima
+    if (archivosSeleccionados.length + nuevosArchivos.length > MAX_ARCHIVOS) {
+        // Mostrar error en consola y resaltar campo
+        console.error('Máximo de archivos excedido');
+        document.getElementById('fileInput').classList.add('is-invalid');
+        return;
+    }
+    
+    // Validar cada archivo
+    nuevosArchivos.forEach(file => {
+        if (!validarArchivo(file)) {
+            return;
+        }
+        
+        // Verificar si el archivo ya fue seleccionado
+        if (!archivosSeleccionados.some(f => f.name === file.name && f.size === file.size)) {
+            archivosSeleccionados.push(file);
+        }
+    });
+    
+    actualizarListaArchivos();
+}
+
+// Validar archivo individual
+function validarArchivo(file) {
+    const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    const validExtensions = ['.xlsx', '.xls'];
+    
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    
+    if (!validExtensions.includes(fileExtension)) {
+        // Mostrar error en consola y resaltar campo
+        console.error('Formato de archivo no válido:', fileExtension);
+        document.getElementById('fileInput').classList.add('is-invalid');
+        return false;
+    }
+    
+    // Validar tamaño (máximo 10MB por archivo)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+        // Mostrar error en consola y resaltar campo
+        console.error('Archivo demasiado grande:', file.name, file.size);
+        document.getElementById('fileInput').classList.add('is-invalid');
+        return false;
+    }
+    
+    return true;
+}
+
+// Actualizar lista de archivos seleccionados
+function actualizarListaArchivos() {
+    if (archivosSeleccionados.length === 0) {
+        archivosSeleccionadosDiv.classList.add('d-none');
+        btnCargar.disabled = true;
+        return;
+    }
+    
+    archivosSeleccionadosDiv.classList.remove('d-none');
+    btnCargar.disabled = false;
+    
+    contadorArchivos.textContent = archivosSeleccionados.length;
+    
+    // Limpiar lista actual
+    listaArchivos.innerHTML = '';
+    
+    // Agregar cada archivo a la lista
+    archivosSeleccionados.forEach((file, index) => {
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+        const fileItem = document.createElement('div');
+        fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+        fileItem.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-file-excel text-success me-3"></i>
+                <div>
+                    <strong>${file.name}</strong>
+                    <br>
+                    <small class="text-muted">${fileSize} MB</small>
+                </div>
+            </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerArchivo(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        listaArchivos.appendChild(fileItem);
+    });
+    
+    actualizarFileInfo();
+}
+
+// Remover archivo de la lista
+function removerArchivo(index) {
+    archivosSeleccionados.splice(index, 1);
+    actualizarListaArchivos();
+}
+
+// Actualizar información de archivos
+function actualizarFileInfo() {
+    if (archivosSeleccionados.length === 0) {
+        fileInfo.classList.add('d-none');
+        return;
+    }
+    
+    fileInfo.classList.remove('d-none');
+    
+    const totalSize = archivosSeleccionados.reduce((sum, file) => sum + file.size, 0);
+    const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+    
+    fileDetails.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Cantidad de archivos:</strong> ${archivosSeleccionados.length}
+            </div>
+            <div class="col-md-6">
+                <strong>Tamaño total:</strong> ${totalSizeMB} MB
+            </div>
+        </div>
+        <div class="mt-2">
+            <strong>Archivos:</strong>
+            <ul class="mb-0">
+                ${archivosSeleccionados.map(file => `<li>${file.name}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+}
+
+// Resetear formulario
+function resetForm() {
+    form.reset();
+    archivosSeleccionados = [];
+    actualizarListaArchivos();
+    fileInfo.classList.add('d-none');
+    btnCargar.disabled = true;
+}
+
+// Enviar formulario
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    if (archivosSeleccionados.length === 0) {
+        // Mostrar error en consola y resaltar campo
+        console.error('No hay archivos seleccionados');
+        document.getElementById('fileInput').classList.add('is-invalid');
+        return;
+    }
+    
+    // Crear FormData con múltiples archivos
+    const formData = new FormData(form);
+    
+    // Agregar cada archivo al FormData
+    archivosSeleccionados.forEach((file, index) => {
+        formData.append(`archivo_${index}`, file);
+    });
+    
+    formData.append('cantidad_archivos', archivosSeleccionados.length);
+    
+    // Mostrar modal de progreso
+    const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+    progressModal.show();
+    
+    // Enviar archivos
+    fetch('{% url "procesar_carga_multiple" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        progressModal.hide();
+        
+        if (data.success) {
+            // Mostrar éxito en consola
+            console.log('Archivos cargados exitosamente:', data.message);
+            resetForm();
+            // Redirigir a la lista de aprendices
+            window.location.href = '{% url "lista_aprendices" %}';
+        } else {
+            // Mostrar error en consola
+            console.error('Error al cargar archivos:', data.message);
+        }
+    })
+    .catch(error => {
+        progressModal.hide();
+        // Mostrar error en consola
+        console.error('Error de conexión:', error);
+    });
+});
+
+// Click en el área de upload para seleccionar archivos
+uploadArea.addEventListener('click', () => {
+    fileInput.click();
+});
+</script>
+
+{% endblock %}

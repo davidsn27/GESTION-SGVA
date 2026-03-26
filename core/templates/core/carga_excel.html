@@ -15,7 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!file) {
                 e.preventDefault();
-                alert('Por favor, selecciona un archivo Excel.');
+                // Resaltar campo de archivo sin alerta
+                document.getElementById('archivoInput').classList.add('is-invalid');
+                document.getElementById('archivoInput').focus();
                 return;
             }
 
@@ -25,7 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!validTypes.includes('.' + fileExtension)) {
                 e.preventDefault();
-                alert('Por favor, selecciona un archivo Excel válido (.xlsx, .xls, .csv)');
+                // Resaltar campo y mostrar error sin alerta
+                document.getElementById('archivoInput').classList.add('is-invalid');
+                document.getElementById('archivoInput').focus();
                 return;
             }
 

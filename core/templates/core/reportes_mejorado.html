@@ -1,0 +1,412 @@
+   
+
+
+    
+{% extends "core/base.html" %}
+{% block content %}
+
+<!-- Agregar librería Lottie -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+
+<!-- Animación de carga -->
+<div id="loading-animation" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+    <div id="lottie-loading" style="width: 200px; height: 200px;"></div>
+</div>
+
+<div class="container mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        <h1 class="mb-0">
+            <i class="fas fa-chart-bar text-primary me-2"></i>
+            Reportes y Estadísticas
+        </h1>
+        <div id="lottie-reportes" style="width: 50px; height: 50px; margin-left: 15px;"></div>
+    </div>
+    
+    <div>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+        </a>
+    </div>
+</div>
+
+<!-- Tarjetas de estadísticas principales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow-lg">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Aprendices</h6>
+                        <h3 class="mb-0">{{ total_aprendices }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <div id="lottie-total-aprendices" style="width: 60px; height: 60px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow-lg">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Contratados</h6>
+                        <h3 class="mb-0">{{ aprendices_contratados }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <div id="lottie-contratados-reportes" style="width: 60px; height: 60px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white shadow-lg">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Disponibles</h6>
+                        <h3 class="mb-0">{{ aprendices_disponibles }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <div id="lottie-disponibles-reportes" style="width: 60px; height: 60px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white shadow-lg">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">En Proceso</h6>
+                        <h3 class="mb-0">{{ total_aprendices|add:"-"|add:aprendices_contratados|add:"-"|add:aprendices_disponibles }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-spinner fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-lg">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie text-primary me-2"></i>
+                    Distribución por Estado
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficaEstados" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-lg">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-list text-success me-2"></i>
+                    Top Estados
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="topEstados">
+                    {% for estado, count in stats_por_estado.items %}
+                    {% if forloop.counter0 < 5 %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge estado-badge" data-estado="{{ estado }}">{{ estado }}</span>
+                        <strong>{{ count }}</strong>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de estadísticas detalladas -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-lg">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table text-info me-2"></i>
+                        Estadísticas Detalladas por Estado
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportarReporte()">
+                        <i class="fas fa-download me-1"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Estado</th>
+                                <th>Cantidad</th>
+                                <th>Porcentaje</th>
+                                <th>Visualización</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in stats_con_porcentaje %}
+                            <tr>
+                                <td>
+                                    <span class="badge estado-badge" data-estado="{{ stat.estado }}">{{ stat.estado }}</span>
+                                </td>
+                                <td><strong>{{ stat.count }}</strong></td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ stat.porcentaje }}%">
+                                            {{ stat.porcentaje }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar bg-primary" style="width: {{ stat.porcentaje }}%"></div>
+                                        </div>
+                                        <small>{{ stat.porcentaje }}%</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p>No hay datos disponibles</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.estado-badge {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+}
+
+/* Colores de badges por estado */
+.estado-badge[data-estado="Disponible"] { background-color: #28a745; color: white; }
+.estado-badge[data-estado="Aprendiz Aplica"] { background-color: #17a2b8; color: white; }
+.estado-badge[data-estado="Empresa Solicita"] { background-color: #ffc107; color: black; }
+.estado-badge[data-estado="En Proceso de Selección"] { background-color: #007bff; color: white; }
+.estado-badge[data-estado="Contratado"] { background-color: #28a745; color: white; }
+.estado-badge[data-estado="Final Contrato"] { background-color: #6c757d; color: white; }
+.estado-badge[data-estado="Cancelado"] { background-color: #dc3545; color: white; }
+.estado-badge[data-estado="Alumno Retirado"] { background-color: #343a40; color: white; }
+.estado-badge[data-estado="Aplazado"] { background-color: #ffc107; color: black; }
+.estado-badge[data-estado="Pendiente Por Certificar"] { background-color: #17a2b8; color: white; }
+.estado-badge[data-estado="Bajo Rendimiento Académico"] { background-color: #e83e8c; color: white; }
+.estado-badge[data-estado="Aprendiz no interesado en contrato"] { background-color: #fd7e14; color: white; }
+.estado-badge[data-estado="Inhabilitado Por Actualización"] { background-color: #dc3545; color: white; }
+.estado-badge[data-estado="Contrato No Registrado"] { background-color: #6c757d; color: white; }
+.estado-badge[data-estado="Fallecido"] { background-color: #343a40; color: white; }
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0,123,255,0.3);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Colores para el gráfico
+const colores = {
+    "Disponible": "#28a745",
+    "Aprendiz Aplica": "#17a2b8", 
+    "Empresa Solicita": "#ffc107",
+    "En Proceso de Selección": "#007bff",
+    "Contratado": "#28a745",
+    "Final Contrato": "#6c757d",
+    "Cancelado": "#dc3545",
+    "Alumno Retirado": "#343a40",
+    "Aplazado": "#ffc107",
+    "Pendiente Por Certificar": "#17a2b8",
+    "Bajo Rendimiento Académico": "#e83e8c",
+    "Aprendiz no interesado en contrato": "#fd7e14",
+    "Inhabilitado Por Actualización": "#dc3545",
+    "Contrato No Registrado": "#6c757d",
+    "Fallecido": "#343a40"
+};
+
+// Datos del gráfico
+const labels = [
+    {% for estado, count in stats_por_estado.items %}
+    "{{ estado }}",
+    {% endfor %}
+];
+
+const data = [
+    {% for estado, count in stats_por_estado.items %}
+    {{ count }},
+    {% endfor %}
+];
+
+const backgroundColors = [
+    {% for estado, count in stats_por_estado.items %}
+    colores["{{ estado }}"] || "#6c757d",
+    {% endfor %}
+];
+
+// Crear gráfico de dona
+new Chart(document.getElementById("graficaEstados"), {
+    type: "doughnut",
+    data: {
+        labels: labels,
+        datasets: [{
+            data: data,
+            backgroundColor: backgroundColors,
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Función para exportar reporte
+function exportarReporte() {
+    // Crear CSV
+    let csv = 'Estado,Cantidad,Porcentaje\n';
+    
+    const total = {{ total_aprendices }};
+    {% for estado, count in stats_por_estado.items %}
+        const porcentaje{{ forloop.counter }} = total > 0 ? ({{ count }} / total * 100).toFixed(1) : 0;
+        csv += '{{ estado }},{{ count }},' + porcentaje{{ forloop.counter }} + '%\n';
+    {% endfor %}
+    
+    // Descargar archivo
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'reporte_aprendices.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Inicializar animaciones Lottie
+document.addEventListener('DOMContentLoaded', function() {
+    // Animación de carga principal
+    const loadingAnimation = lottie.loadAnimation({
+        container: document.getElementById('lottie-loading'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets2.lottiefiles.com/packages/lf20_1vz6wzqj.json'
+    });
+
+    // Ocultar animación de carga después de 1.5 segundos
+    setTimeout(() => {
+        document.getElementById('loading-animation').style.display = 'none';
+    }, 1500);
+
+    // Animación para reportes - Gráficos/estadísticas
+    lottie.loadAnimation({
+        container: document.getElementById('lottie-reportes'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets9.lottiefiles.com/packages/lf20_5gq4qzjx.json'
+    });
+
+    // Animación para total aprendices - Grupo de personas
+    lottie.loadAnimation({
+        container: document.getElementById('lottie-total-aprendices'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets9.lottiefiles.com/packages/lf20_5gq4qzjx.json'
+    });
+
+    // Animación para contratados - Maletín/éxito
+    lottie.loadAnimation({
+        container: document.getElementById('lottie-contratados-reportes'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets7.lottiefiles.com/packages/lf20_2v8j0x.json'
+    });
+
+    // Animación para disponibles - Check verde
+    lottie.loadAnimation({
+        container: document.getElementById('lottie-disponibles-reportes'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets5.lottiefiles.com/packages/lf20_t9h2p7kx.json'
+    });
+});
+</script>
+
+{% endblock %}
